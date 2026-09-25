@@ -1,0 +1,547 @@
+openapi: 3.0.3
+info:
+  title: PresenceKF — API de l’épreuve finale KFOKAM48
+  version: "1.0"
+  description: |
+    Contrat initial imposé et extensions décidées pendant l’analyse.
+    Les cinq opérations obligatoires gardent leurs chemins, verbes, corps et
+    réponses de succès requis. Les erreurs utilisent toujours {code, message}.
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Sessions
+  - name: Présences
+  - name: Étudiants
+  - name: Exercices
+  - name: Relectures
+  - name: Tableau
+
+paths:
+  /api/promotions:
+    get:
+      tags: [Étudiants]
+      summary: Lister les promotions pour le sélecteur
+      responses:
+        '200':
+          description: Promotions disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Promotion' }
+
+  /api/sessions/configuration:
+    put:
+      tags: [Sessions]
+      summary: Configurer la durée globale de la prochaine session
+      description: |
+        Réglage à usage unique, obligatoire et sans défaut. La dernière valeur
+        configurée remplace celle encore en attente. La prochaine ouverture
+        consomme la valeur. Le réglage est global et non isolé par formateur.
+      parameters:
+        - $ref: '#/components/parameters/FormateurId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [dureeMinutes]
+              properties:
+                dureeMinutes:
+                  type: integer
+                  minimum: 15
+                  maximum: 480
+      responses:
+        '200':
+          description: Réglage de durée enregistré
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dureeMinutes]
+                properties:
+                  dureeMinutes: { type: integer, minimum: 15, maximum: 480 }
+        '400': { $ref: '#/components/responses/Erreur' }
+
+  /api/sessions:
+    get:
+      tags: [Sessions]
+      summary: Lister les sessions d’une promotion
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Sessions de la promotion
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SessionDetail' }
+        '404': { $ref: '#/components/responses/Erreur' }
+    post:
+      tags: [Sessions]
+      summary: Ouvrir une session et obtenir un code de présence
+      description: |
+        Le corps et le succès respectent l’opération imposée. L’erreur 409
+        DUREE_SESSION_REQUISE est une extension décidée si aucun réglage global
+        de durée n’est en attente.
+      parameters:
+        - $ref: '#/components/parameters/FormateurId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [titre, promotionId]
+              properties:
+                titre: { type: string }
+                promotionId: { type: integer, format: int64 }
+      responses:
+        '201':
+          description: Session ouverte
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, code, ouvertureAt, expirationAt]
+                properties:
+                  id: { type: integer, format: int64 }
+                  code: { type: string, pattern: '^[A-Z0-9]{6}$' }
+                  ouvertureAt: { type: string, format: date-time }
+                  expirationAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '409':
+          description: Aucun réglage de durée n’est disponible
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erreur' }
+              example:
+                code: DUREE_SESSION_REQUISE
+                message: Configurez la durée avant d’ouvrir une session.
+
+  /api/sessions/{id}:
+    get:
+      tags: [Sessions]
+      summary: Consulter les détails d’une session et son échéance
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Session consultée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionDetail' }
+        '404': { $ref: '#/components/responses/Erreur' }
+
+  /api/sessions/{id}/exercices:
+    get:
+      tags: [Exercices]
+      summary: Lister les dépôts d’une session pour le tableau du formateur
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/FormateurId'
+      responses:
+        '200':
+          description: Exercices et indicateurs de relecture, sans divulguer l’affectation nominative
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExerciceTableau' }
+        '404': { $ref: '#/components/responses/Erreur' }
+
+  /api/etudiants:
+    get:
+      tags: [Étudiants]
+      summary: Lister les étudiants d’une promotion pour le sélecteur
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Étudiants disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Etudiant' }
+        '404': { $ref: '#/components/responses/Erreur' }
+
+  /api/presences:
+    post:
+      tags: [Présences]
+      summary: Un étudiant marque sa présence avec le code
+      parameters:
+        - $ref: '#/components/parameters/NavigateurId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [code, etudiantId]
+              properties:
+                code: { type: string }
+                etudiantId: { type: integer, format: int64 }
+      responses:
+        '201':
+          description: Présence enregistrée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Presence' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '410': { $ref: '#/components/responses/Erreur' }
+
+  /api/presences/formateur:
+    post:
+      tags: [Présences]
+      summary: Ajouter manuellement une présence comme formateur
+      parameters:
+        - $ref: '#/components/parameters/FormateurId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [sessionId, etudiantId]
+              properties:
+                sessionId: { type: integer, format: int64 }
+                etudiantId: { type: integer, format: int64 }
+      responses:
+        '201':
+          description: Présence créée avec source FORMATEUR
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Presence' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '410': { $ref: '#/components/responses/Erreur' }
+
+  /api/exercices:
+    post:
+      tags: [Exercices]
+      summary: Un étudiant présent dépose un lien avant l’échéance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [sessionId, etudiantId, lien]
+              properties:
+                sessionId: { type: integer, format: int64 }
+                etudiantId: { type: integer, format: int64 }
+                lien: { type: string, format: uri }
+      responses:
+        '201':
+          description: Exercice déposé
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, statut]
+                properties:
+                  id: { type: integer, format: int64 }
+                  statut: { type: string, enum: [EN_ATTENTE_SANS_RELECTEUR, EN_ATTENTE] }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+
+  /api/exercices/{id}:
+    get:
+      tags: [Exercices]
+      summary: L’auteur consulte son exercice et son résultat sans identité du relecteur
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/EtudiantId'
+      responses:
+        '200':
+          description: Détails visibles à l’auteur
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExerciceAuteur' }
+        '403': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+    put:
+      tags: [Exercices]
+      summary: Remplacer le lien avant le démarrage de la relecture
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/EtudiantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [lien]
+              properties:
+                lien: { type: string, format: uri }
+      responses:
+        '200':
+          description: Lien remplacé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExerciceAuteur' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '403': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+
+  /api/relectures:
+    get:
+      tags: [Relectures]
+      summary: Lister les relectures anonymisées attribuées à l’étudiant
+      parameters:
+        - $ref: '#/components/parameters/EtudiantId'
+      responses:
+        '200':
+          description: Liens et états des exercices, sans nom ni ID de l’auteur
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RelectureAffectee' }
+        '403': { $ref: '#/components/responses/Erreur' }
+
+  /api/relectures/{id}/demarrer:
+    post:
+      tags: [Relectures]
+      summary: Démarrer explicitement une relecture affectée
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/EtudiantId'
+      responses:
+        '200':
+          description: Relecture démarrée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RelectureAffectee' }
+        '403': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+
+  /api/relectures/{id}:
+    post:
+      tags: [Relectures]
+      summary: Soumettre une première note et son commentaire (opération imposée)
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/EtudiantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteCommentaire' }
+      responses:
+        '200': { description: Relecture enregistrée }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '403': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+    put:
+      tags: [Relectures]
+      summary: Modifier uniquement la note jusqu’à l’échéance de session
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/EtudiantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [note]
+              properties:
+                note: { type: integer, minimum: 0, maximum: 20 }
+      responses:
+        '200':
+          description: Note mise à jour ; commentaire inchangé
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, note]
+                properties:
+                  id: { type: integer, format: int64 }
+                  note: { type: integer, minimum: 0, maximum: 20 }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '403': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+
+  /api/tableau:
+    get:
+      tags: [Tableau]
+      summary: Consulter le tableau récapitulatif d’une promotion
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+        - $ref: '#/components/parameters/FormateurId'
+      responses:
+        '200':
+          description: Indicateurs calculés par l’API
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LigneTableau' }
+        '404': { $ref: '#/components/responses/Erreur' }
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    EtudiantId:
+      name: X-Etudiant-Id
+      in: header
+      required: true
+      description: Identifiant de démonstration uniquement ; ne fournit pas une authentification.
+      schema: { type: integer, format: int64 }
+    FormateurId:
+      name: X-Formateur-Id
+      in: header
+      required: true
+      description: Identifiant de démonstration uniquement ; ne fournit pas une authentification.
+      schema: { type: integer, format: int64 }
+    NavigateurId:
+      name: X-Navigateur-Id
+      in: header
+      required: true
+      description: Identifiant temporaire de navigateur, non fiable en production.
+      schema: { type: string, minLength: 1 }
+
+  schemas:
+    Erreur:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code: { type: string, example: CODE_EXPIRE }
+        message: { type: string, example: Le code de présence a expiré. }
+    Presence:
+      type: object
+      required: [id, sessionId, etudiantId, source]
+      properties:
+        id: { type: integer, format: int64 }
+        sessionId: { type: integer, format: int64 }
+        etudiantId: { type: integer, format: int64 }
+        source: { type: string, enum: [ETUDIANT, FORMATEUR] }
+    SessionDetail:
+      type: object
+      required: [id, titre, promotionId, ouvertureAt, expirationAt, dureeMinutes, cloturePrevueAt, statut]
+      properties:
+        id: { type: integer, format: int64 }
+        titre: { type: string }
+        promotionId: { type: integer, format: int64 }
+        ouvertureAt: { type: string, format: date-time }
+        expirationAt: { type: string, format: date-time, description: Expiration fixe du code, 15 minutes après l’ouverture. }
+        dureeMinutes: { type: integer, minimum: 15, maximum: 480 }
+        cloturePrevueAt: { type: string, format: date-time }
+        clotureAt: { type: string, format: date-time, nullable: true, description: Instant de clôture traité par le planificateur ou son rattrapage. }
+        statut: { type: string, enum: [OUVERTE, CLOTUREE] }
+    Promotion:
+      type: object
+      required: [id, nom]
+      properties:
+        id: { type: integer, format: int64 }
+        nom: { type: string }
+    Etudiant:
+      type: object
+      required: [id, nom, promotionId]
+      properties:
+        id: { type: integer, format: int64 }
+        nom: { type: string }
+        promotionId: { type: integer, format: int64 }
+    NoteCommentaire:
+      type: object
+      additionalProperties: false
+      required: [note, commentaire]
+      properties:
+        note: { type: integer, minimum: 0, maximum: 20 }
+        commentaire: { type: string }
+    ExerciceAuteur:
+      type: object
+      required: [id, sessionId, statut]
+      properties:
+        id: { type: integer, format: int64 }
+        sessionId: { type: integer, format: int64 }
+        lien: { type: string, format: uri }
+        statut: { type: string, enum: [EN_ATTENTE_SANS_RELECTEUR, EN_ATTENTE, EN_COURS, RELUE] }
+        note: { type: integer, minimum: 0, maximum: 20, nullable: true }
+        commentaire: { type: string, nullable: true }
+    RelectureAffectee:
+      type: object
+      required: [id, exerciceId, sessionId, statut, lienExercice]
+      properties:
+        id: { type: integer, format: int64 }
+        exerciceId: { type: integer, format: int64 }
+        sessionId: { type: integer, format: int64 }
+        lienExercice: { type: string, format: uri }
+        statut: { type: string, enum: [EN_ATTENTE, EN_COURS, RELUE] }
+        note: { type: integer, minimum: 0, maximum: 20, nullable: true }
+        commentaire: { type: string, nullable: true }
+    ExerciceTableau:
+      type: object
+      required: [id, etudiantId, lien, statut, relecteurAffecte]
+      properties:
+        id: { type: integer, format: int64 }
+        etudiantId: { type: integer, format: int64 }
+        lien: { type: string, format: uri }
+        statut: { type: string, enum: [EN_ATTENTE_SANS_RELECTEUR, EN_ATTENTE, EN_COURS, RELUE] }
+        relecteurAffecte: { type: boolean }
+        note: { type: integer, minimum: 0, maximum: 20, nullable: true }
+        deposeAt: { type: string, format: date-time }
+    PresenceParSession:
+      type: object
+      required: [sessionId, titre, present]
+      properties:
+        sessionId: { type: integer, format: int64 }
+        titre: { type: string }
+        present: { type: boolean }
+        source: { type: string, enum: [ETUDIANT, FORMATEUR], nullable: true }
+    LigneTableau:
+      type: object
+      required: [etudiantId, nom, presences, exercicesDeposes, moyenne, relecturesEnAttente, presencesParSession, exercicesSansRelecteur]
+      properties:
+        etudiantId: { type: integer, format: int64 }
+        nom: { type: string }
+        presences: { type: integer, minimum: 0 }
+        exercicesDeposes: { type: integer, minimum: 0 }
+        moyenne: { type: number, nullable: true, description: Moyenne calculée par l’API, arrondie à deux décimales ; null sans note. }
+        relecturesEnAttente: { type: integer, minimum: 0 }
+        exercicesSansRelecteur: { type: integer, minimum: 0 }
+        presencesParSession:
+          type: array
+          items: { $ref: '#/components/schemas/PresenceParSession' }
+
+  responses:
+    Erreur:
+      description: Toute erreur HTTP utilise le format JSON uniforme {code, message}.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erreur' }
+          example:
+            code: CODE_EXPIRE
+            message: Le code de présence a expiré.
