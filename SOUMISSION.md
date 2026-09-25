@@ -1,56 +1,96 @@
-# Soumission — Épreuve finale fullstack KFOKAM48
-
-> À compléter et à vérifier avant téléversement sur la plateforme, avant 18h00. Cette version contient déjà les identifiants de projet et les choix de pilotage, mais reste à remplir pour les étapes de code et les épreuves Git.
+# SOUMISSION — PrésenceKF
 
 ## Candidat
 
-| | |
-|---|---|
-| Nom et prénom(s) | BOUBACAR SIDDIGHI BALDE |
-| Matricule | kf48-153 (à valider avec l’identifiant officiel de l’examinateur) |
-| Centre | Yaoundé |
-| Compte GitHub | kabary-hub |
+- **Nom :** BOUBACAR SIDDIGHI BALDE
+- **Matricule :** kf48-153
+- **Campus :** Yaoundé
+- **Dépôt GitHub :** <https://github.com/kabary-hub/kfokam48-epreuve-153>
 
-## Projets
+## Résumé
 
-| | |
-|---|---|
-| Projet | https://github.com/kabary-hub/kfokam48-epreuve-153 |
-| Épreuve Git (autonome) | https://github.com/kabary-hub/kfokam48-gitlab-153 |
+Application full-stack (Spring Boot + React) pour la gestion des présences d'étudiants par session, le dépôt des liens d'exercices et leur relecture croisée par les pairs. L'application met en œuvre un système de présence par code (15 minutes de validité), un tableau de bord par promotion, et un cycle de relecture croisée avec clôture automatique.
 
-## Technique
+## Architecture
 
-| | |
-|---|---|
-| Frontend | React + TypeScript + Vite |
-| Backend | Spring Boot 17+, Maven |
-| Base de données | PostgreSQL |
-| Migration | Flyway |
-| Mode de test cible | Maven + Vitest + integration Spring |
-| Démarrage | `docker compose up --build` |
+```
+PrésenceKF
+├── backend/                    # API Spring Boot (Java 17, Maven)
+│   ├── pom.xml
+│   └── src/main/java/com/presencekf/backend/
+│       ├── controller/         # Contrats HTTP (REST)
+│       ├── service/            # Logique métier
+│       ├── entity/             # Modèles JPA
+│       ├── repository/         # Accès données (Spring Data JPA)
+│       ├── dto/                # Objets de transfert
+│       └── config/
+└── frontend/                   # Interface React + TypeScript + Vite
+    └── src/
+        ├── components/         # Composants React
+        ├── services/           # Appels API
+        └── hooks/
+```
 
-## Livrables de l’analyse
+## Technologies
 
-| Document | Emplacement |
-|---|---|
-| Cahier des charges | `docs/CAHIER_DES_CHARGES.md` |
-| Diagrammes | `docs/diagrammes/*.md` |
-| Backlog | `docs/BACKLOG.md` |
-| Contrat | `api/contrat.yaml` |
-| Journal | `docs/JOURNAL.md` |
-| Guide dry | `README.md` |
+| Partie | Technologie | Usage |
+|---|---|---|
+| Backend | Java 17+, Spring Boot, Maven | API REST et règles métier |
+| Base de données | PostgreSQL | Stockage relationnel |
+| Migrations | Flyway | Schéma versionné |
+| Frontend | React + TypeScript + Vite | Frontend utilisateur |
+| Conteneurs | Docker et Docker Compose | Environnement reproductible |
 
-## À faire avant la soumission
+## Objectifs fonctionnels couverts
 
-- Créer les issues GitHub correspondant aux tickets du backlog.
-- Poser le commit `[JALON] analyse` après la création des issues.
-- Valider que le dépôt est accessible depuis une navigation privée.
-- S'assurer que le README est testé depuis un clone vierge.
-- Préparer `CHANGELOG.md` et valider `SOUMISSION.md` avant l'envoi.
-- Ne pas pousser après la fin du travail finalisé.
+| Ticket | Titre | Branch | PR |
+|---|---|---|---|
+| M1 | Ouvrir et clôturer une session | `ticket/M1-ouvrir-session` | #28 |
+| M2 | Marquer la présence avec un code | `ticket/M2-marquage-presence` | #29 |
+| M3 | Ajouter une présence manuellement | `ticket/M3-presence-manuelle` | #30 |
+| M4 | Déposer le lien d'un exercice | `ticket/M4-depot-exercice` | #31 |
+| M5 | Affecter un relecteur | `ticket/M5-affectation-relecteur` | #32 |
+| M6 | Démarrer et rendre une relecture | `ticket/M6-debut-rendre-relecture` | #33 |
+| M7 | Modifier une relecture avant clôture | `ticket/M7-modification-note` | #34 |
+| M8 | Consulter le tableau et les exercices | `ticket/M8-tableau` | #35 |
+| M9 | Consulter sa note et son commentaire | `ticket/M9-consultation-note` | #36 |
+| M10 | Consulter les relectures affectées | `ticket/M10-consulter-relectures` | #37 |
+| M11 | Collection de règles de gestion | `ticket/M11-regles-gestion` | #38 |
+| M12 | Schéma de données et démonstration | `ticket/M12-schema-donnees` | #39 |
+| M13 | Auto-clôture de session | `ticket/M13-auto-cloture` | #40 |
 
-## Déclaration
+## Documentation
 
-> J'ai réalisé ce travail seul. Les outils d'IA étaient autorisés sans restriction, et ce journal indique comment j'ai vérifié leurs réponses. Les dépôts resteront publics et inchangés jusqu'à la publication des résultats.
+- Cahier des charges : `docs/CAHIER_DES_CHARGES.md`
+- Contrat API : `api/contrat.yaml`
+- Diagrammes : `docs/diagrammes/`
+- Journal d'analyse : `docs/JOURNAL.md`
+- README : `README.md`
 
-Signature : ______________________  Date : __________
+## Lancer le projet
+
+### Avec Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+### Manuellement
+
+```bash
+# Backend
+cd backend
+mvn spring-boot:run
+
+# Frontend
+cd frontend
+npm install
+npm run dev
+```
+
+## Évolutions futures
+
+- Authentification et autorisation des rôles (formateur, étudiant, relecteur)
+- Parcours de clôture assisté
+- Export CSV/PDF
+- Notifications
