@@ -1,5 +1,7 @@
 # Journal de bord — KF48-153
 
+> **Note sur les dates.** Le sujet situe l'épreuve au 25 septembre 2026. Ce journal et les commits Git reflètent les dates réelles de travail (27 septembre 2026 et jours suivants). Aucune date n'a été antidatée : la cohérence entre l'historique Git et ce journal est vérifiable par `git log --date=short`.
+
 > À mettre à jour à la fin de chaque étape, en indiquant les faits réels, le temps passé et la manière dont les réponses IA ont été vérifiées. Aucune entrée ne doit être prétendue à l’avance.
 
 ## Étape 0 — Intégration et alignement
