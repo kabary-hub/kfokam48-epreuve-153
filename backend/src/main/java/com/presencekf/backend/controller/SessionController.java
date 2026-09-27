@@ -1,12 +1,26 @@
 package com.presencekf.backend.controller;
 
-import com.presencekf.backend.dto.SessionDto;
+import com.presencekf.backend.dto.SessionCreateDto;
+import com.presencekf.backend.dto.SessionResponseDto;
+import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.service.SessionService;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
+/**
+ * Contrôleur REST pour les sessions de cours.
+ *
+ * M1 / EF2 : POST /api/sessions avec corps {titre, promotionId} → 201
+ * {id, code, ouvertureAt, expirationAt}.
+ *
+ * Respecte B2 (contrat api/contrat.yaml) et B3 (aucune requête base
+ * dans le contrôleur : tout passe par SessionService).
+ */
 @RestController
 @RequestMapping("/api/sessions")
 public class SessionController {
@@ -18,31 +32,14 @@ public class SessionController {
     }
 
     @PostMapping
-    public SessionDto ouvrirSession(@RequestParam String code,
-                                    @RequestParam LocalDateTime debut,
-                                    @RequestParam LocalDateTime fin) {
-        return sessionService.ouvrirSession(code, debut, fin);
-    }
-
-    @PutMapping("/{id}/cloture")
-    public SessionDto clôturerSession(@PathVariable Long id) {
-        return sessionService.clôturerSession(id);
-    }
-
-    @PostMapping("/{id}/presence")
-    public SessionDto marquerPresence(@PathVariable Long id,
-                                      @RequestParam String etudiant,
-                                      @RequestParam String code) {
-        return sessionService.marquerPresence(code, etudiant);
-    }
-
-    @GetMapping("/{code}")
-    public SessionDto getSessionByCode(@PathVariable String code) {
-        return sessionService.getSessionByCode(code);
-    }
-
-    @GetMapping
-    public List<SessionDto> getAllSessions() {
-        return sessionService.getAllSessions();
+    @ResponseStatus(HttpStatus.CREATED)
+    public SessionResponseDto ouvrir(@Valid @RequestBody SessionCreateDto dto) {
+        Session session = sessionService.ouvrirSession(dto.getTitre(), dto.getPromotionId());
+        return new SessionResponseDto(
+                session.getId(),
+                session.getCode(),
+                session.getOuvertureAt(),
+                session.getExpirationAt()
+        );
     }
 }
