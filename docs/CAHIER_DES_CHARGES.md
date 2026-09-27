@@ -191,17 +191,68 @@ Les colonnes « État actuel » reflètent l'état du dépôt au 25 septembre 20
 
 ## 9. Livrables
 
-- `docs/CAHIER_DES_CHARGES.md` (ce document).
-- `docs/diagrammes/D1-cas-utilisation.md`.
-- `docs/diagrammes/D2-modele-donnees.md`.
-- `docs/diagrammes/D3-sequence-presence.md`.
-- `docs/diagrammes/D4-etats-exercice.md` (bonus +3).
-- `docs/BACKLOG.md` : propositions de tickets à créer comme issues GitHub ; les issues elles-mêmes doivent être créées sur le dépôt.
-- `api/contrat.yaml` complété et figé avant le premier commit de code.
-- `.gitignore` Java/Node posé avant le premier commit de code.
-- Backend Spring Boot, frontend React, Flyway, données de démo, tests et `docker-compose.yml` aux étapes prévues.
-- `docs/JOURNAL.md`, tenu à chaque étape ; `CHANGELOG.md`, `README.md` testé, `SOUMISSION.md` final à téléverser sur la plateforme.
-- Deux dépôts publics au total : projet `kfokam48-epreuve-153` et dépôt Git séparé de l’épreuve `kfokam48-gitlab-153`.
+### 9.1 — Documents d'analyse (étape 1, avant tout code)
+
+| Livrable | Emplacement | Statut attendu |
+|---|---|---|
+| Cahier des charges (10 sections, EF/RG numérotés) | `docs/CAHIER_DES_CHARGES.md` | Rédigé, tenu à jour après l'étape 3 |
+| Diagramme D1 — cas d'utilisation | `docs/diagrammes/D1-cas-utilisation.md` | Mermaid, versionné |
+| Diagramme D2 — modèle de données | `docs/diagrammes/D2-modele-donnees.md` | Mermaid, cohérent avec les migrations Flyway |
+| Diagramme D3 — séquence « marquer sa présence » | `docs/diagrammes/D3-sequence-presence.md` | Mermaid, codes HTTP conformes au contrat |
+| Diagramme D4 — états-transitions d'un exercice (bonus) | `docs/diagrammes/D4-etats-exercice.md` | Mermaid, statuts cohérents avec D2 |
+| Backlog en issues GitHub | `github.com/kabary-hub/kfokam48-epreuve-153/issues` | 12-13 issues, critères, priorités, EFx/RGx |
+| Contrat d'API complété et figé | `api/contrat.yaml` | 5 opérations imposées + extensions justifiées |
+| Journal de bord (1 entrée par étape) | `docs/JOURNAL.md` | Tenu à jour à chaque étape |
+
+### 9.2 — Code backend (étape 2)
+
+| Livrable | Emplacement | Contrainte |
+|---|---|---|
+| Projet Spring Boot (Java 17, Maven) | `backend/` | B1 |
+| Wrapper Maven | `backend/mvnw`, `backend/mvnw.cmd` | B1 |
+| Migrations Flyway | `backend/src/main/resources/db/migration/V1__init.sql` | B5 |
+| Contrôleurs REST | `backend/src/main/java/.../controller/` | B3, B2 |
+| Services métier | `backend/src/main/java/.../service/` | B3 |
+| Repositories JPA | `backend/src/main/java/.../repository/` | B3 |
+| Entités JPA | `backend/src/main/java/.../entity/` | B3 |
+| DTO (entrée/sortie) | `backend/src/main/java/.../dto/` | B3 |
+| Gestion centralisée des erreurs | `backend/src/main/java/.../exception/GlobalExceptionHandler.java` | B4 |
+| Test unitaire règle métier | `backend/src/test/java/.../SessionServiceTest.java` | B6 |
+| Test d'intégration endpoint | `backend/src/test/java/.../PresenceControllerIT.java` | B6 |
+| Configuration application | `backend/src/main/resources/application.properties` (+ `application-test.properties`) | B5 |
+
+### 9.3 — Code frontend (étape 2)
+
+| Livrable | Emplacement | Contrainte |
+|---|---|---|
+| Projet React + Vite + TypeScript | `frontend/` | F1 |
+| Écran formateur (ouvrir session, tableau) | `frontend/src/pages/FormateurPage.tsx` | F2 |
+| Écran étudiant (présence, dépôt) | `frontend/src/pages/EtudiantPage.tsx` | F2 |
+| Écran relecteur (relecture) | `frontend/src/pages/RelecteurPage.tsx` | F2 |
+| Couche API dédiée | `frontend/src/api/` | F3 |
+| Hooks de chargement / erreur | `frontend/src/hooks/useAsync.ts` | F3 |
+| Build de production | `npm run build` → `frontend/dist/` | F1 |
+
+### 9.4 — Infrastructure et démarrage
+
+| Livrable | Emplacement | Contrainte |
+|---|---|---|
+| `docker-compose.yml` | Racine du dépôt | Démarrage en 1 commande |
+| Dockerfile backend | `backend/Dockerfile` | Démarrage en 1 commande |
+| Dockerfile frontend | `frontend/Dockerfile` | Démarrage en 1 commande |
+| Données de démonstration | `CommandLineRunner` ou Flyway `afterMigrate` | Application non vide pour le correcteur |
+| README d'installation testé | `README.md` | Testé depuis un clone vierge |
+
+### 9.5 — Livrables de fin d'épreuve
+
+| Livrable | Emplacement | Contrainte |
+|---|---|---|
+| `CHANGELOG.md` | Racine du dépôt | Cohérent avec l'historique Git |
+| `SOUMISSION.md` | Racine du dépôt | Hash complets (40 caractères) |
+| Dépôt Git-lab (étape 5) | `github.com/kabary-hub/kfokam48-gitlab-153` | Public, séparé du projet |
+| Journal final | `docs/JOURNAL.md` | Étapes 1 à 6 renseignées |
+
+« Ces livrables couvrent les quatre piliers du barème : analyse (documents d'étape 1), produit (code backend et frontend), conduite du changement (mises à jour après enveloppe) et traçabilité (journal, CHANGELOG, SOUMISSION). »
 
 ## 10. Démarche prévue
 
