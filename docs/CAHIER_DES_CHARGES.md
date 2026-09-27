@@ -71,16 +71,20 @@ Répartition par priorité :
 
 ## 5. Exigences non fonctionnelles
 
-| Réf | Exigence | Vérification |
+| Réf | Exigence | Comment on la vérifie |
 |---|---|---|
-| ENF1 | L’écran présence est utilisable sur téléphone | Vérification manuelle à 375 px de largeur, sans débordement horizontal |
-| ENF2 | Le tableau répond en moins de 2 secondes pour 60 étudiants et 10 sessions | Test de performance reproductible sur données de démonstration/fixture ; mesure documentée |
-| ENF3 | Le code est aléatoire, limité dans le temps et non exposé après sa fenêtre d’usage | Tests d’expiration et de génération ; le code n’est pas réutilisé dans des données triviales |
-| ENF4 | Le schéma est versionné | Démarrage vierge exécute les migrations Flyway ; aucune configuration `ddl-auto=update` hors tests |
-| ENF5 | Toute erreur HTTP renvoie exactement un objet JSON `{code, message}` sans stack trace | Tests de validation, erreurs métier, 404 et erreur serveur contrôlée |
-| ENF6 | Le projet est reproductible sur un poste vierge | Démarrage par `docker compose up` ou au plus trois commandes documentées et testées |
-| ENF7 | Les interfaces affichent chargement et erreurs API | Vérification manuelle des états de chargement, succès et erreur |
-| ENF8 | Aucune moyenne n’est recalculée par le frontend | Vérification du code frontend : il affiche seulement la moyenne retournée par l’API |
+| ENF1 | L'interface de marquage de présence est utilisable sur un téléphone (viewport 375 px minimum) | Test manuel sur viewport 375 px : saisie du code possible sans zoom, bouton visible et cliquable, aucun débordement horizontal |
+| ENF2 | Le tableau du formateur répond en moins de 2 secondes pour une promotion de 60 étudiants sur 10 sessions | Test de charge simple : 60 étudiants, 10 sessions, 600 présences et 200 exercices en base ; mesure du temps de réponse de GET /api/tableau?promotionId=X (moyenne sur 10 appels < 2 s) |
+| ENF3 | Le code de présence est un identifiant à 6 caractères alphanumériques non devinable, et le blocage après 5 erreurs limite le brute force | Vérification : le code est généré aléatoirement (SecureRandom ou équivalent) ; après 5 erreurs consécutives, l'étudiant est bloqué 2 minutes (RG3) et reçoit 400 TROP_TENTATIVES |
+| ENF4 | Le schéma de base de données est versionné par Flyway ou Liquibase ; ddl-auto=update est interdit hors tests | Vérification : présence de src/main/resources/db/migration/V1__init.sql ; absence de spring.jpa.hibernate.ddl-auto=update dans application.properties (hors profil test) ; la table flyway_schema_history existe après démarrage |
+| ENF5 | Toutes les erreurs de l'API respectent le format {code, message} sans jamais exposer de stack trace | Vérification : appel de chaque endpoint en erreur (400, 403, 404, 409, 410) et lecture de la réponse ; aucune trace Java, aucun corps vide, aucun message par défaut de Spring |
+
+Justification :
+- ENF1 répond à Q3 et Q16 (usage mobile réel des étudiants).
+- ENF2 fixe une cible mesurable pour le tableau (Q16).
+- ENF3 relie la sécurité du code à Q2 et Q4.
+- ENF4 impose la contrainte B5 du sujet.
+- ENF5 impose la contrainte B4 et le format d'erreur du contrat.
 
 ## 6. Règles de gestion
 
