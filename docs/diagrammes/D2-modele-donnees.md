@@ -1,84 +1,75 @@
 # D2 — Modèle de données
 
-> Modèle conceptuel de la première version. Il sert de référence aux migrations. Tout changement impose une nouvelle migration versionnée ; il n'est jamais fait de réécriture d'une migration déjà partagée.
+**Entités** : Promotion, Etudiant, Formateur, Session, Presence, Exercice, Relecture.
+
+**Cohérence** : ce diagramme définit les tables visées par la migration Flyway `V1__init.sql`. Chaque classe correspond à une table et chaque attribut à une colonne.
 
 ```mermaid
-erDiagram
-    PROMOTION ||--o{ ETUDIANT : regroupe
-    PROMOTION ||--o{ SESSION : accueille
-    FORMATEUR ||--o{ SESSION : ouvre
-    FORMATEUR ||--o{ CONFIGURATION_GLOBALE : règle
-    SESSION ||--o{ PRESENCE : enregistre
-    ETUDIANT ||--o{ PRESENCE : possede
-    SESSION ||--o{ EXERCICE : contient
-    ETUDIANT ||--o{ EXERCICE : depose
-    EXERCICE ||--o| RELECTURE : recoit
-    ETUDIANT ||--o{ RELECTURE : est_relecteur
+classDiagram
+    class Promotion {
+        +Long id PK
+        +String nom
+    }
 
-    PROMOTION {
-        bigint id PK
-        string nom
+    class Etudiant {
+        +Long id PK
+        +String nom
+        +Long promotionId FK
     }
-    FORMATEUR {
-        bigint id PK
-        string nom
+
+    class Formateur {
+        +Long id PK
+        +String nom
     }
-    CONFIGURATION_GLOBALE {
-        bigint id PK
-        int duree_minutes
-        datetime modifiee_at
+
+    class Session {
+        +Long id PK
+        +String titre
+        +String code
+        +LocalDateTime ouvertureAt
+        +LocalDateTime expirationAt
+        +LocalDateTime clotureAt
+        +Long promotionId FK
+        +Long formateurId FK
     }
-    ETUDIANT {
-        bigint id PK
-        bigint promotion_id FK
-        string nom
+
+    class Presence {
+        +Long id PK
+        +Long sessionId FK
+        +Long etudiantId FK
+        +String source
+        +LocalDateTime marqueAt
     }
-    SESSION {
-        bigint id PK
-        bigint promotion_id FK
-        bigint formateur_id FK
-        string titre
-        string code UK
-        datetime ouverture_at
-        datetime expiration_at
-        int duree_minutes
-        datetime cloture_prevue_at
-        datetime cloture_at "nullable"
-        string statut
+
+    class Exercice {
+        +Long id PK
+        +Long sessionId FK
+        +Long etudiantId FK
+        +String lien
+        +String statut
+        +Long relecteurId FK nullable
+        +LocalDateTime deposeAt
     }
-    PRESENCE {
-        bigint id PK
-        bigint session_id FK
-        bigint etudiant_id FK
-        datetime creee_at
-        string source
+
+    class Relecture {
+        +Long id PK
+        +Long exerciceId FK
+        +Long relecteurId FK
+        +Integer note
+        +String commentaire
+        +String statut
+        +LocalDateTime rendueAt
     }
-    EXERCICE {
-        bigint id PK
-        bigint session_id FK
-        bigint etudiant_id FK
-        string lien
-        datetime depose_at
-        string statut
-    }
-    RELECTURE {
-        bigint id PK
-        bigint exercice_id FK_UK
-        bigint relecteur_id FK
-        datetime demarree_at "nullable"
-        datetime rendue_at "nullable"
-        int note "nullable, 0..20"
-        string commentaire "nullable avant rendu"
-    }
+
+    Promotion "1" --> "*" Etudiant : contient
+    Promotion "1" --> "*" Session : organise
+    Formateur "1" --> "*" Session : ouvre
+    Session "1" --> "*" Presence : enregistre
+    Session "1" --> "*" Exercice : recoit
+    Etudiant "1" --> "*" Presence : marque
+    Etudiant "1" --> "*" Exercice : depose
+    Etudiant "1" --> "*" Relecture : rend
+    Exercice "1" --> "0..1" Relecture : est_relu_par
 ```
 
-## Contraintes relationnelles
-
-- `CONFIGURATION_GLOBALE` : une ligne, valeur dans `15..480`. La configuration n'a pas de valeur par défaut. Quand aucun réglage n'existe, une ouverture de session refuse avec `409 DUREE_SESSION_REQUISE`.
-- `PRESENCE` : unicité (`session_id`, `etudiant_id`), `source` limité à `ETUDIANT` ou `FORMATEUR`. La présence manuelle doit être traitée dans la fenêtre de 15 minutes du code.
-- `EXERCICE` : unicité (`session_id`, `etudiant_id`).
-- `RELECTURE` : une ligne unique par exercice, contenant l'affectation du relecteur. L'auteur ne peut pas être son propre relecteur, ni un étudiant être assigné à un autre exercice de la session.
-- `SESSION` : `expiration_at = ouverture_at + 15 minutes`; `cloture_prevue_at = ouverture_at + duree_minutes`, avec `15 <= duree_minutes <= 480`. L'échéance est figée à l'ouverture ; la clôture automatique peut être rattrapée par le service après un arrêt serveur.
-- Les présences et les dépôts doivent respecter l'état `OUVERTE` de la session ; après clôture, toute modification est refusée sans modifier l'état métier.
-- Les relectures anonymisées ne renvoient ni le nom ni l'identifiant de l'auteur ; l'auteur ne voit jamais l'identité du relecteur.
-- La modification de note (route `PUT`) s'autorise uniquement sur la note avant échéance ; le commentaire reste celui du premier envoi.
+`Exercice.relecteurId` est nullable : si aucun étudiant présent admissible n'est disponible pour relire l'exercice, il n'y a pas encore de relecteur affecté et l'exercice reste visible avec le statut `EN_ATTENTE_SANS_RELECTEUR` (Q7, Q11, Q12).
