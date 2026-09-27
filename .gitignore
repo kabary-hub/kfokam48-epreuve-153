@@ -27,6 +27,9 @@ hs_err_pid*
 !.env.example
 application-local.properties
 
+# Local recovery copy
+_sauvegarde_local/
+
 # OS
 .DS_Store
 Thumbs.db
