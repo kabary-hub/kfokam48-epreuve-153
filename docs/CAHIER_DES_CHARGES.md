@@ -22,20 +22,31 @@ Le relecteur est un étudiant dans un état particulier (assigné à un exercice
 
 ## 3. Périmètre
 
-**Inclus dans la version livrée :**
-- Ouverture des sessions avec une durée de fermeture automatique paramétrée entre 15 et 480 minutes ; génération d’un code à six caractères alphanumériques, choix de projet. Aucune clôture manuelle n’est prévue selon la décision du candidat.
-- Présence avec code, expiration après 15 minutes, unicité par étudiant/session, gestion de cinq erreurs puis blocage de deux minutes par session navigateur, et ajout manuel visible comme `FORMATEUR`.
-- Dépôt d’un lien d’exercice par étudiant présent, jusqu’à clôture de la session.
-- Affectation aléatoire à la soumission parmi les étudiants présents admissibles, en excluant l’auteur ; attente visible si aucun candidat n’est disponible.
-- Relecture démarrable explicitement, note entière 0–20, commentaire, affichage sans nom du relecteur et modification jusqu’à clôture.
-- Tableau par promotion avec agrégats et présence détaillée par session ; API de consultation des exercices et affectations.
-- Démonstration, migrations versionnées, tests et documentation de démarrage.
+**Inclus dans cette version :**
 
-**Explicitement exclu :**
-- Authentification, gestion sécurisée des comptes, autorisations de production et identité vérifiée ; les identifiants d’acteur transmis par en-têtes sont uniquement un mécanisme de démonstration.
-- CRUD des promotions, étudiants et formateurs : référentiels préchargés en données de démonstration.
-- Notifications, téléversement de fichiers (seul un lien est conservé), application mobile native, historique/audit de toutes les versions de notes.
-- Garantie de sécurité anti-devinette distribuée entre plusieurs instances ou contre le changement d’identité/session navigateur.
+- Gestion des sessions : ouverture par le formateur, génération d'un code à 6 caractères, expiration à +15 minutes, clôture manuelle (Q2, Q12).
+- Marquage de présence par code (étudiant, Q2) et ajout manuel par le formateur avec source=FORMATEUR visible (Q14).
+- Dépôt du lien d'exercice par l'étudiant, avec possibilité de remplacement tant que la relecture n'a pas commencé (Q12, Q13).
+- Assignation automatique d'un relecteur parmi les étudiants présents à la session, hors auteur, sans double affectation (Q6, Q7).
+- Relecture : note entière de 0 à 20 avec commentaire, modifiable tant que la session n'est pas clôturée (Q9, Q10).
+- Consultation de sa note et de son commentaire par l'étudiant relu, sans révélation de l'identité du relecteur (Q8).
+- Tableau récapitulatif par promotion pour le formateur : présences, exercices déposés, moyenne, relectures en attente (Q16).
+- Données de démonstration chargées au démarrage (promotion, formateur, étudiants, session exemple).
+
+**Explicitement exclu de cette version :**
+
+- Authentification et mots de passe (Q1) : l'identité est portée par un identifiant transmis en clair (formateurId, etudiantId).
+- Gestion CRUD des promotions, étudiants et formateurs : ces référentiels sont supposés préexister et sont chargés par les données de démonstration.
+- Clôture automatique de session : le sujet impose une clôture manuelle par le formateur (Q12). Toute mention d'auto-clôture est retirée du CDC, des diagrammes, du contrat et du code.
+- Upload de fichiers : on ne stocke qu'un lien vers l'exercice (Q13).
+- Notifications par email, push ou SMS.
+- Historique complet des modifications de relecture : seule la dernière version est conservée (le commentaire reste immuable après la 1re soumission).
+- Application mobile native (le frontend React+Vite est responsive, suffisant pour Q16 et ENF1).
+- Import/export de masse, statistiques avancées, tableaux de bord multi-promotions.
+- Sécurité de production (rôles Spring Security, JWT, HTTPS) : hors périmètre pour l'épreuve, documenté en section 7.
+
+**Justification du périmètre :**
+Ce découpage garde les 5 opérations imposées par le contrat d'API et leurs extensions directement issues des 16 questions client. Tout ce qui n'est pas explicitement demandé (auth, CRUD, notifications, upload, auto-clôture) est exclu pour concentrer l'effort sur la conformité B1-B6, F1-F3 et le barème.
 
 ## 4. Exigences fonctionnelles
 
