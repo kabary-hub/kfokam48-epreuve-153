@@ -1,87 +1,70 @@
 package com.presencekf.backend.service;
 
-import com.presencekf.backend.dto.PresenceDto;
-import com.presencekf.backend.dto.SessionDto;
-import com.presencekf.backend.entity.Presence;
 import com.presencekf.backend.entity.Session;
-import com.presencekf.backend.repository.PresenceRepository;
 import com.presencekf.backend.repository.SessionRepository;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Service métier pour les sessions de cours.
+ *
+ * Règles couvertes :
+ * - RG1 : un code de présence expire 15 minutes après l'ouverture (Q2).
+ * - EF2 : ouverture d'une session à partir de {titre, promotionId}.
+ * - B3 : logique métier isolée du contrôleur et du repository.
+ */
 @Service
 public class SessionService {
 
+    /** RG1 : durée de validité du code en minutes (Q2). */
+    private static final int CODE_VALIDITY_MINUTES = 15;
+
+    /** Alphabet du code : majuscules et chiffres. */
+    private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    /** Longueur du code de présence. */
+    private static final int CODE_LENGTH = 6;
+
+    /** Générateur de nombres aléatoires sécurisé (non devinable, Q4). */
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final SessionRepository sessionRepository;
-    private final PresenceRepository presenceRepository;
-    private static final long CODE_VALIDITY_MINUTES = 15;
 
-    public SessionService(SessionRepository sessionRepository, PresenceRepository presenceRepository) {
+    public SessionService(SessionRepository sessionRepository) {
         this.sessionRepository = sessionRepository;
-        this.presenceRepository = presenceRepository;
     }
 
-    public SessionDto ouvrirSession(String code, LocalDateTime debut, LocalDateTime fin) {
-        Session session = new Session(code, debut, fin);
-        session.setOuverte(true);
-        session = sessionRepository.save(session);
-        return toDto(session);
-    }
+    /**
+     * Ouvre une nouvelle session de cours.
+     *
+     * @param titre       le titre de la session
+     * @param promotionId l'identifiant de la promotion
+     * @return la Session créée avec son code et ses horaires calculés
+     */
+    public Session ouvrirSession(String titre, Long promotionId) {
+        Session session = new Session();
+        session.setTitre(titre);
+        session.setCode(genererCode());
+        session.setPromotionId(promotionId);
 
-    public SessionDto clôturerSession(Long id) {
-        Session session = sessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
-        if (!session.isOuverte()) {
-            throw new RuntimeException("Session déjà fermée");
-        }
-        session.fermer();
-        session = sessionRepository.save(session);
-        return toDto(session);
-    }
-
-    public SessionDto marquerPresence(String code, String etudiant) {
-        Session session = sessionRepository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
-        if (!session.isOuverte()) {
-            throw new RuntimeException("Session fermée, impossible de marquer une présence");
-        }
         LocalDateTime now = LocalDateTime.now();
-        long diff = ChronoUnit.MINUTES.between(now, session.getFin());
-        if (diff < 0) {
-            throw new RuntimeException("Session expirée, impossible de marquer une présence");
+        session.setOuvertureAt(now);
+        session.setExpirationAt(now.plusMinutes(CODE_VALIDITY_MINUTES));
+
+        return sessionRepository.save(session);
+    }
+
+    /**
+     * Génère un code aléatoire de 6 caractères [A-Z0-9].
+     * Utilise SecureRandom pour éviter la devinette entre étudiants (Q4).
+     */
+    private String genererCode() {
+        StringBuilder sb = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
         }
-        Presence presence = new Presence(etudiant, code);
-        session.ajouterPresence(presence);
-        presence = presenceRepository.save(presence);
-        return toDto(session);
-    }
-
-    public SessionDto getSessionByCode(String code) {
-        Session session = sessionRepository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
-        return toDto(session);
-    }
-
-    public List<SessionDto> getAllSessions() {
-        return sessionRepository.findAll().stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    private SessionDto toDto(Session session) {
-        SessionDto dto = new SessionDto(session.getId(), session.getCode(), session.getDebut(), session.getFin(), session.isOuverte());
-        dto.setPresences(session.getPresences().stream().map(p -> {
-            PresenceDto pd = new PresenceDto(p.getId(), p.getEtudiant(), p.getCode(), p.getTimestamp());
-            return pd;
-        }).collect(Collectors.toList()));
-        dto.setExercices(session.getExercices().stream().map(e -> {
-            ExerciceDto ed = new ExerciceDto(e.getId(), e.getLien(), e.getEtudiant());
-            return ed;
-        }).collect(Collectors.toList()));
-        return dto;
+        return sb.toString();
     }
 }
