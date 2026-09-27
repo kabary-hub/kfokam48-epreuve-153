@@ -150,27 +150,28 @@ Toutes les hypothèses ci-dessus sont documentées comme décisions assumées du
 
 | Réf | Contrainte imposée | Engagement (cible) | État actuel |
 |---|---|---|---|
-| B1 | Java 17 ou plus, Maven, wrapper `mvnw` commité | Backend Java 17+ avec Maven et wrappers `mvnw`, `mvnw.cmd` committés dans `backend/` | Partiel — `backend/pom.xml` local indique Java 17, mais il n'est pas suivi par Git ; wrappers absents et aucun backend dans `origin/main` |
-| B2 | Le contrat `api/contrat.yaml` est respecté à la lettre : chemins, verbes, codes de statut, format d'erreur | Tester en intégration les cinq opérations imposées et garantir le format `{code, message}` par le gestionnaire global d'erreurs | Partiel — le contrat est suivi dans `origin/main`, mais aucune implémentation backend n'y est suivie ; le contrôleur local non suivi utilise des routes et paramètres incompatibles |
-| B3 | Séparation contrôleur / service / repository ; aucune requête base dans un contrôleur, aucune entité JPA exposée en JSON — passage par des DTO | Séparer les packages `controller`, `service`, `repository`, `entity`, `dto` et retourner uniquement des DTO | Partiel — ces packages et quelques classes existent localement mais ne sont pas suivis ; la séparation et l'absence d'entités exposées ne sont pas vérifiées pour l'ensemble de l'API |
-| B4 | Validation des entrées et gestion centralisée des erreurs (`@RestControllerAdvice`) ; aucune stack trace renvoyée au client | Valider les DTO d'entrée et ajouter un gestionnaire global qui retourne `{code, message}` sans stack trace | À faire (Phase 2) — aucun gestionnaire global ni mécanisme complet de validation n'a été trouvé |
-| B5 | Schéma versionné par Flyway ou Liquibase, migrations commitées ; `ddl-auto=update` interdit hors tests | Ajouter une migration Flyway initiale et désactiver `ddl-auto=update` hors tests | Partiel — le `pom.xml` local déclare Flyway, mais aucune migration n'a été trouvée ; la configuration locale utilise `spring.jpa.hibernate.ddl-auto=update` ; rien de cela n'est suivi sur `origin/main` |
-| B6 | Un test unitaire d'une règle métier réelle et un test d'intégration d'un endpoint, exécutables sans base locale personnelle | Ajouter un test unitaire, un test d'intégration et vérifier leur exécution sur une base de test reproductible avec `mvnw test` | À faire (Phase 2) — aucun test backend ni wrapper Maven n'a été trouvé |
+| B1 | Java 17 ou plus, Maven, wrapper `mvnw` commité | Backend Java 17+ avec Maven et wrappers `mvnw`, `mvnw.cmd` committés dans `backend/` | Satisfait sur la branche M1 : Java 17 ciblé, wrapper Maven 3.9.6 commité |
+| B2 | Le contrat `api/contrat.yaml` est respecté à la lettre : chemins, verbes, codes de statut, format d'erreur | Tester en intégration les cinq opérations imposées et garantir le format `{code, message}` par le gestionnaire global d'erreurs | Partiel : l'endpoint M1 `POST /api/sessions` suit le contrat; les autres opérations seront traitées par les tickets ultérieurs |
+| B3 | Séparation contrôleur / service / repository ; aucune requête base dans un contrôleur, aucune entité JPA exposée en JSON — passage par des DTO | Séparer les packages `controller`, `service`, `repository`, `entity`, `dto` et retourner uniquement des DTO | Respecté pour le parcours de création M1 par contrôleur, service, repository et DTO |
+| B4 | Validation des entrées et gestion centralisée des erreurs (`@RestControllerAdvice`) ; aucune stack trace renvoyée au client | Valider les DTO d'entrée et ajouter un gestionnaire global qui retourne `{code, message}` sans stack trace | Gestion globale `{code, message}` ajoutée et testée pour les erreurs de validation M1 |
+| B5 | Schéma versionné par Flyway ou Liquibase, migrations commitées ; `ddl-auto=update` interdit hors tests | Ajouter une migration Flyway initiale et désactiver `ddl-auto=update` hors tests | Migrations Flyway V1/V2 commitées; `ddl-auto=none` hors tests |
+| B6 | Un test unitaire d'une règle métier réelle et un test d'intégration d'un endpoint, exécutables sans base locale personnelle | Ajouter un test unitaire, un test d'intégration et vérifier leur exécution sur une base de test reproductible avec `mvnw test` | 7 tests passent via `./mvnw test`, avec H2 en mémoire pour l'intégration |
 
 ### 8.2 — Contraintes imposées par le sujet (frontend)
 
 | Réf | Contrainte imposée | Engagement (cible) | État actuel |
 |---|---|---|---|
-| F1 | Framework déclaré et justifié en une ligne dans le README ; build fonctionnel | Utiliser React 18, Vite et TypeScript, justifier React en une ligne dans le README et vérifier `npm run build` | Partiel — le prototype local React/Vite a réussi `npm run build`, mais ses fichiers ne sont pas suivis ; le README suivi ne contient pas encore la justification demandée |
-| F2 | Trois écrans : formateur (ouvrir une session, voir le tableau), étudiant (marquer sa présence, déposer son exercice), relecteur (faire une relecture) | Fournir les parcours formateur, étudiant et relecteur, accessibles depuis l'interface React | À faire (Phase 2) — seul un formulaire d'ouverture de session est présent dans le frontend local non suivi ; écrans étudiant et relecteur absents |
-| F3 | Couche API dédiée, états de chargement et d'erreur, aucune règle métier dupliquée ; la moyenne affichée vient de l'API | Centraliser les appels API, afficher les états de chargement/erreur et afficher la moyenne renvoyée par l'API sans la recalculer | Partiel — un service Axios local existe pour les sessions seulement et le formulaire affiche une erreur ; la couche API complète et les états de chargement manquent ; ces fichiers ne sont pas suivis |
+| F1 | Framework déclaré et justifié en une ligne dans le README ; build fonctionnel | Utiliser React 18, Vite et TypeScript, justifier React en une ligne dans le README et vérifier `npm run build` | React 18, Vite et TypeScript sont en place; `npm run build` passe. La justification README reste à vérifier/compléter. |
+| F2 | Trois écrans : formateur (ouvrir une session, voir le tableau), étudiant (marquer sa présence, déposer son exercice), relecteur (faire une relecture) | Fournir les parcours formateur, étudiant et relecteur, accessibles depuis l'interface React | Le formulaire M1 d'ouverture de session est présent; les parcours étudiant et relecteur restent à implémenter. |
+| F3 | Couche API dédiée, états de chargement et d'erreur, aucune règle métier dupliquée ; la moyenne affichée vient de l'API | Centraliser les appels API, afficher les états de chargement/erreur et afficher la moyenne renvoyée par l'API sans la recalculer | Couche API dédiée M1 et états loading/error implémentés; les parcours/API ultérieurs restent à traiter. |
 
 ### 8.3 — Contraintes personnelles (choix du candidat)
 
 | Domaine | Choix | Justification |
 |---|---|---|
 | Base de données | PostgreSQL 16 via Docker Compose | Base relationnelle adaptée aux liens entre sessions, présences, exercices et relectures ; environnement de démonstration reproductible |
-| Migrations | Flyway | Versionner le schéma avec des migrations additives, sans réécrire les migrations déjà commitées |
+| Migrations | Flyway 9 (`flyway-core` seul, version gérée par Spring Boot 3.2.0) | Le support PostgreSQL est inclus dans cette version; aucune version de dépendance séparée requise. |
+| Wrapper Maven | `mvnw` + `mvnw.cmd` committés | Permet de lancer le build sans Maven installé (B1). |
 | Tests backend | JUnit 5, Mockito et Spring Boot Test ; H2 en profil test | Couvrir une règle métier et une intégration d'endpoint sans dépendre d'une base locale personnelle |
 | Tests frontend | Vitest, si le temps le permet | Vérifier les parcours et les états d'interface sans en faire une dépendance au démarrage de l'application |
 | Build frontend | Vite | Outil de build choisi pour le frontend React |
@@ -187,7 +188,7 @@ Toutes les hypothèses ci-dessus sont documentées comme décisions assumées du
 - Commits atomiques avec des messages explicites au format `type(scope): description (EFx, RGx)` lorsque pertinent.
 - Chaque commit de code cite les références `EFx`/`RGx` applicables et inclut `Closes #N` lorsqu'il termine une issue.
 
-Les colonnes « État actuel » reflètent l'état du dépôt au 25 septembre 2026, avant la Phase 2 (implémentation). La conformité finale sera vérifiée par les tests B6 et le build F1 à l'issue de la Phase 4.
+Les colonnes « État actuel » reflètent les livrables de la première version et les travaux restant à réaliser dans les tickets suivants.
 
 ## 9. Livrables
 
