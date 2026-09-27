@@ -50,23 +50,24 @@ Ce découpage garde les 5 opérations imposées par le contrat d'API et leurs ex
 
 ## 4. Exigences fonctionnelles
 
-| Réf | Exigence | Critère d’acceptation vérifiable | Priorité |
+| Réf | Exigence | Critère d'acceptation | Priorité |
 |---|---|---|---|
-| EF1 | Marquer sa présence avec un code | Étant étudiant, si je donne un code existant et non expiré, l’API répond `201` et la présence apparaît dans le tableau | Must |
-| EF2 | Configurer puis ouvrir une session | Le formateur configure la durée globale (15–480 min), puis ouvre une session avec titre et promotion ; le POST retourne `201` au format imposé, utilise le réglage en attente, et fixe l’expiration du code à +15 min | Must |
-| EF3 | Ajouter une présence manuellement | Si le formateur ajoute la présence durant la fenêtre de 15 minutes, elle apparaît avec source `FORMATEUR` | Must |
-| EF4 | Déposer le lien d’exercice | Si un étudiant présent soumet un URI valide avant clôture, l’API répond `201` et l’exercice est créé | Must |
-| EF5 | Remplacer le lien d’exercice | Si l’exercice n’a pas été démarré en relecture et la session n’est pas clôturée, le remplacement réussit ; après démarrage il est refusé | Should |
-| EF6 | Affecter un relecteur | Au dépôt, le système tire au hasard un étudiant présent autre que l’auteur et sans affectation dans cette session ; sinon l’exercice est signalé en attente sans relecteur | Must |
-| EF7 | Démarrer une relecture affectée | Si le relecteur assigné demande explicitement le démarrage, l’état passe à `EN_COURS` et le remplacement du lien est interdit | Must |
-| EF8 | Rendre une relecture | Si le relecteur affecté rend une note entière de 0 à 20 et un commentaire, l’API enregistre la relecture ; auto-relecture refusée `403` | Must |
-| EF9 | Modifier la note avant clôture | Si la session n’est pas clôturée, le relecteur affecté peut remplacer uniquement la note ; le commentaire reste inchangé ; après clôture, toute modification est refusée | Must, décision Q10 précisée par le candidat |
-| EF10 | Consulter le tableau formateur | Le tableau retourne pour chaque étudiant les compteurs, moyenne calculée par l’API et présence de chaque session de la promotion | Must |
-| EF11 | Clôturer automatiquement une session à l’échéance configurée | À la date d’échéance, le serveur clôture la session ; les mutations sont refusées. Après redémarrage, la première requête vérifie et rattrape les échéances dépassées | Must, extension assumée contre Q12 |
-| EF12 | Consulter sa note/commentaire | L’étudiant auteur peut voir sa note et son commentaire si rendus, sans l’identité du relecteur | Must |
-| EF13 | Voir les relectures affectées anonymement | Un étudiant consulte les liens et états des relectures qui lui sont affectées, sans nom ni ID de l’auteur | Must, décision candidat |
-| EF14 | Gérer les codes incorrects | À la cinquième erreur dans une session navigateur, le serveur bloque les tentatives de cette session pendant deux minutes | Must |
-| EF15 | Réaffecter les attentes lorsque c’est possible | Lorsqu’une nouvelle présence est créée, les exercices en attente peuvent être attribués aléatoirement à un candidat admissible devenu disponible | Must |
+| EF1 | L'étudiant marque sa présence avec un code | Quand je saisis un code valide et non expiré, ma présence apparaît dans le tableau du formateur | Must |
+| EF2 | Le formateur ouvre une session et obtient un code | Quand je crée une session avec {titre, promotionId}, je reçois 201 {id, code, ouvertureAt, expirationAt} avec expirationAt = ouvertureAt + 15 min | Must |
+| EF3 | Le formateur peut ajouter une présence manuellement | Quand j'ajoute une présence pour un étudiant de la promotion, elle est enregistrée avec source = FORMATEUR et visible dans le tableau | Must |
+| EF4 | L'étudiant dépose le lien de son exercice | Quand je dépose un URI valide, l'exercice est créé avec statut = DEPOSE | Must |
+| EF5 | L'étudiant peut remplacer le lien de son exercice | Quand je remplace le lien avant toute relecture commencée, le nouveau lien est pris en compte | Should |
+| EF6 | Le système assigne un relecteur à chaque exercice déposé | Quand un exercice est déposé, un relecteur est choisi au hasard parmi les étudiants présents hors auteur ; si aucun candidat, relecteurId = null et statut = EN_ATTENTE_SANS_RELECTEUR | Must |
+| EF7 | Le relecteur rend une note et un commentaire | Quand je soumets une note entière entre 0 et 20, la relecture passe au statut RELUE et l'étudiant relu peut voir la note | Must |
+| EF8 | Le relecteur peut modifier sa note avant clôture | Quand je modifie ma note tant que la session n'est pas clôturée, la nouvelle valeur remplace l'ancienne ; le commentaire initial reste immuable | Should |
+| EF9 | Le formateur consulte le tableau d'une promotion | Quand je demande GET /api/tableau?promotionId=X, j'obtiens pour chaque étudiant : présences, exercices déposés, moyenne, relectures en attente | Must |
+| EF10 | L'étudiant relu consulte sa note et son commentaire | Quand je consulte mon exercice relu, je vois la note et le commentaire mais pas le nom ni l'id du relecteur | Should |
+| EF11 | Le formateur clôture une session manuellement | Quand je clôture la session, plus aucun dépôt ni modification de relecture n'est possible ; les relectures deviennent définitives | Must |
+
+Répartition par priorité :
+- Must (8) : EF1, EF2, EF3, EF4, EF6, EF7, EF9, EF11
+- Should (3) : EF5, EF8, EF10
+- Could : aucune exigence fonctionnelle supplémentaire dans cette version (les extensions éventuelles sont documentées en section 7).
 
 ## 5. Exigences non fonctionnelles
 
