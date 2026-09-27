@@ -12,13 +12,13 @@ PrésenceKF répond au besoin de la formation KFOKAM48 de suivre les activités 
 
 ## 2. Acteurs et rôles
 
-| Acteur | Ce qu’il peut faire | Ce qu’il ne peut pas faire |
+| Acteur | Ce qu'il peut faire | Ce qu'il ne peut pas faire |
 |---|---|---|
-| Formateur | Paramétrer la durée de la prochaine session, ouvrir une session, obtenir son code de présence, ajouter manuellement une présence dans la fenêtre d’acceptation, consulter le tableau et les détails de sa promotion | Clôturer manuellement une session (non prévu par l’extension retenue), soumettre ou modifier une relecture en tant qu’étudiant ; agir sans que son identité d’acteur soit indiquée dans le prototype |
-| Étudiant | Se sélectionner dans la liste, marquer sa présence avec un code non expiré, déposer un lien avant clôture, consulter sa note/commentaire quand la relecture existe | Marquer sa présence après expiration, déposer après clôture, consulter l’identité du relecteur, relire son propre exercice |
-| Relecteur | Rôle tenu par un étudiant affecté : commencer la relecture, rendre une note et un commentaire, modifier sa relecture avant clôture (décision Q10) | Relire son propre exercice, commencer une relecture non affectée, relire plus d’un exercice par session selon l’hypothèse retenue |
+| Formateur | Ouvrir une session, obtenir un code, clôturer la session (Q12), ajouter une présence manuellement marquée FORMATEUR (Q14), consulter le tableau d'une promotion (Q16) | Marquer une présence sans que la source soit visible, relire un exercice, modifier une note de relecture |
+| Étudiant | Marquer sa présence avec un code (Q2), déposer le lien de son exercice (Q12), remplacer le lien avant relecture (Q13), consulter sa note et son commentaire sans voir le nom du relecteur (Q8) | Relire son propre exercice (Q5), voir le nom de son relecteur (Q8), marquer sa présence après expiration du code (Q3) |
+| Relecteur | Rendre une note entière de 0 à 20 avec commentaire (Q9), modifier sa note tant que la session n'est pas clôturée (Q10) | Relire son propre exercice (Q5), relire plus d'un exercice par session (Q6), modifier son commentaire après la première soumission (décision Q10 > Q15) |
 
-Le relecteur n’est pas une entité/identité distincte : c’est un étudiant désigné sur une affectation de relecture.
+Le relecteur est un étudiant dans un état particulier (assigné à un exercice). Cette décision évite une entité redondante et simplifie le modèle de données : la table Relecture porte relecteurId → Etudiant.
 
 ## 3. Périmètre
 
