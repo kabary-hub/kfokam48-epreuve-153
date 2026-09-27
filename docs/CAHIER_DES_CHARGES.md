@@ -256,18 +256,88 @@ Ces livrables couvrent les quatre piliers du barème : analyse (documents d'éta
 
 ## 10. Démarche prévue
 
-1. **Analyse, sans code :** valider cette spécification, compléter les quatre diagrammes, compléter/figer l’API, créer le backlog d’issues, poser `.gitignore`, préparer le journal. Puis commit dédié `[JALON] analyse`, poussé avant le premier commit de code.
-2. **v0.1 :** implémenter uniquement les tickets Must, une branche par ticket et une PR par branche, tickets liés/fermés par commits ; intégrer Flyway dès la première tranche de code, ajouter les tests et données de démonstration. Commit/push `[JALON] v0.1` après intégration des Must.
-3. **Enveloppe :** seulement après `v0.1` poussé, ouvrir `./enveloppe`. Créer d’abord une issue, reproduire le problème, établir les changements BD/API/UI requis, migrer sans modifier les migrations précédentes, ré-prioriser et séparer correctif et évolution en branches/PR ; mettre à jour CDC et diagrammes dans un commit documentaire explicite.
-4. **Version finale :** livrer les priorités finales, documenter ce qui reste, préparer CHANGELOG/README/backlog et tester depuis un clone vierge. Selon le choix du candidat, le jalon `[JALON] v1.0` sera créé avant les derniers documents finaux ; le commit final à soumettre sera le dernier hash après tous les livrables.
-5. **Épreuve Git :** travailler exclusivement dans le dépôt distinct cloné depuis `git-lab.bundle`, résoudre les cinq situations de son README, publier toutes les branches dans le second dépôt ; la réécriture de l’historique ne concerne que cette épreuve.
-6. **Soumission :** renseigner identité, centre, liens publics, hash complet de 40 caractères, frontend et commandes ; vérifier l’accès privé, les hashes et l’état Git, puis téléverser avant 18h00. Ne plus pousser après la sélection du hash déclaré.
+### 10.1 — Vue d'ensemble des 6 étapes
 
-**Definition of Done — un ticket est terminé quand :**
-- ses critères d’acceptation sont vérifiés et sa règle `RGx` est citée dans le commit/test pertinent ;
-- le code suit les couches prévues et le contrat, et les tests correspondants passent ;
-- la PR est liée à l’issue, fusionnée dans `main`, et le commit ferme l’issue ;
-- la documentation impactée est mise à jour et `main` reste démarrable.
+| Étape | Objectif | Jalon Git | Livrables principaux |
+|---|---|---|---|
+| 1 | Analyser, spécifier, concevoir | [JALON] analyse | CDC, D1-D4, backlog, contrat figé |
+| 2 | Construire la première version (Must) | [JALON] v0.1 | Backend + frontend des 8 EF Must, tests B6 |
+| 3 | Ouvrir l'enveloppe, gérer le changement | — | Issue de bug, migration V2, contrat mis à jour, CDC/diagrammes corrigés |
+| 4 | Livrer la version finale | [JALON] v1.0 | CHANGELOG, README testé, backlog trié |
+| 5 | Épreuve Git indépendante | — | Dépôt kfokam48-gitlab-153 public |
+| 6 | Soumettre | — | SOUMISSION.md téléversé avant 18h00 |
+
+### 10.2 — Démarche détaillée par étape
+
+**Étape 1 — Analyse et conception**
+- Rédiger les 10 sections du CDC, numéroter EF1-EF11 et RG1-RG16.
+- Produire 4 diagrammes Mermaid (D1-D4) dans `docs/diagrammes/`.
+- Créer les issues GitHub avec critères d'acceptation et références EFx/RGx.
+- Compléter `api/contrat.yaml` avec les extensions justifiées.
+- Poser [JALON] analyse (commit vide).
+
+**Étape 2 — Première version**
+- Une branche par issue Must (8 EF Must).
+- Une PR par branche, avec `Closes #N` dans le commit.
+- Corriger chaque PR selon les écarts identifiés dans le rapport d'audit.
+- Ajouter le `@RestControllerAdvice` global, les tests B6, la migration V1.
+- Poser [JALON] v0.1 (commit vide).
+
+**Étape 3 — Enveloppe**
+- Ouvrir `./enveloppe` après [JALON] v0.1.
+- Ouvrir une issue avant tout code pour le bug signalé.
+- Reproduire le bug (étapes documentées).
+- Ajouter une migration V2 (ne jamais modifier V1).
+- Mettre à jour `api/contrat.yaml`.
+- Ré-prioriser le backlog par écrit.
+- Séparer correctif et évolution en deux branches.
+- Mettre à jour CDC et diagrammes dans un commit dédié.
+
+**Étape 4 — Version finale**
+- Créer `CHANGELOG.md` cohérent avec l'historique Git.
+- Tester le README depuis un clone vierge dans `/tmp`.
+- Trier le backlog restant (Must terminés, Should partiels, Could non faits).
+- Poser [JALON] v1.0 (commit vide).
+
+**Étape 5 — Épreuve Git**
+- Cloner `git-lab.bundle` dans `kfokam48-gitlab-153`.
+- Résoudre les 5 situations du README.
+- Créer le second dépôt public et y pousser toutes les branches.
+
+**Étape 6 — Soumission**
+- Remplir `SOUMISSION.md` avec les hash complets (40 caractères).
+- Vérifier les 2 liens en navigation privée.
+- Téléverser avant 18h00.
+
+### 10.3 — Stratégie en cas de retard
+
+Si le temps manque, la priorité descend dans cet ordre :
+1. Must absolus : EF1, EF2, EF4, EF7, EF9 (les 5 opérations du contrat).
+2. Sécurité du dépôt : commits atomiques, pas de fichiers générés, README testé.
+3. Must secondaires : EF3, EF6, EF11.
+4. Should : EF5, EF8, EF10.
+5. Extensions : D4, Vitest, données de démo enrichies.
+
+Ce qui ne sera jamais sacrifié :
+- La propreté de l'historique Git (commits atomiques, messages clairs).
+- Le format d'erreur `{code, message}`.
+- Les migrations versionnées.
+- Le respect du contrat d'API.
+
+### 10.4 — Definition of Done
+
+Un ticket est terminé quand :
+- Le code compile avec `mvnw clean install` (backend) et `npm run build` (frontend).
+- Les tests passent avec `mvnw test` et sans base locale personnelle.
+- Le comportement est vérifiable manuellement, critère d'acceptation validé.
+- Le commit cite EFx/RGx et inclut `Closes #N`.
+- La PR est fusionnée dans `main` et `main` reste sain.
+- Le CDC, le contrat ou les diagrammes sont mis à jour si nécessaire.
+
+Un jalon est considéré comme posé quand :
+- Le commit `[JALON]` est vide de code (`--allow-empty`).
+- Le message est exactement `[JALON] analyse`, `[JALON] v0.1` ou `[JALON] v1.0`.
+- Le commit est poussé sur `origin/main`.
 
 ## Journal des révisions
 
