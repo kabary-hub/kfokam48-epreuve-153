@@ -8,7 +8,7 @@
 
 ## 1. Contexte et objectif
 
-La direction de la formation KFOKAM48 veut gérer les présences et la relecture croisée des exercices pour ses sessions de cours. Le parcours doit permettre à un formateur de paramétrer la durée et d’ouvrir une session, à un étudiant de signaler sa présence pendant la fenêtre prévue et de déposer un lien d’exercice, puis au système d’affecter des relectures entre étudiants présents. La session se clôt automatiquement à son échéance configurée selon la décision d’extension prise par le candidat. Le formateur doit consulter des indicateurs par promotion, tandis que le relecteur traite les exercices qui lui sont affectés. L’application vise à remplacer un suivi manuel difficile à consolider par des données consultables et cohérentes. Le rendu visuel n’est pas un objectif de notation ; la conformité au contrat, la démarche, les tests et l’historique Git sont prioritaires.
+PrésenceKF répond au besoin de la formation KFOKAM48 de suivre les activités de cours au sein de chaque promotion. Le formateur ouvre une session, partage un code de présence valable quinze minutes et peut enregistrer une présence manuellement si un étudiant rencontre un problème. Les étudiants déposent le lien de leur exercice avant la clôture de la session. Le système attribue chaque exercice à relire à un étudiant présent admissible et conserve la note ainsi que le commentaire remis. Le formateur consulte les présences, les dépôts et les relectures en attente dans un tableau récapitulatif. Il clôt la session manuellement ; aucune clôture automatique n’est prévue (Q12). L’application vise à remplacer un suivi dispersé par des informations centralisées et vérifiables, dans un prototype pédagogique sans authentification.
 
 ## 2. Acteurs et rôles
 
