@@ -55,7 +55,7 @@ Ce découpage garde les 5 opérations imposées par le contrat d'API et leurs ex
 | EF1 | L'étudiant marque sa présence avec un code | Quand je saisis un code valide et non expiré, ma présence apparaît dans le tableau du formateur | Must |
 | EF2 | Le formateur ouvre une session et obtient un code | Quand je crée une session avec {titre, promotionId}, je reçois 201 {id, code, ouvertureAt, expirationAt} avec expirationAt = ouvertureAt + 15 min | Must |
 | EF3 | Le formateur peut ajouter une présence manuellement | Quand j'ajoute une présence pour un étudiant de la promotion, elle est enregistrée avec source = FORMATEUR et visible dans le tableau | Must |
-| EF4 | L'étudiant dépose le lien de son exercice | Quand je dépose un URI valide, l'exercice est créé avec statut = DEPOSE | Must |
+| EF4 | L'étudiant dépose le lien de son exercice | Quand je dépose un URI valide, l'exercice est créé avec statut = EN_ATTENTE (relecteur trouvé) ou EN_ATTENTE_SANS_RELECTEUR (aucun candidat disponible). DEPOSE est un état transitoire interne non renvoyé au client. | Must |
 | EF5 | L'étudiant peut remplacer le lien de son exercice | Quand je remplace le lien avant toute relecture commencée, le nouveau lien est pris en compte | Should |
 | EF6 | Le système assigne un relecteur à chaque exercice déposé | Quand un exercice est déposé, un relecteur est choisi au hasard parmi les étudiants présents hors auteur ; si aucun candidat, relecteurId = null et statut = EN_ATTENTE_SANS_RELECTEUR | Must |
 | EF7 | Le relecteur rend une note et un commentaire | Quand je soumets une note entière entre 0 et 20, la relecture passe au statut RELUE et l'étudiant relu peut voir la note | Must |
