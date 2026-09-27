@@ -34,6 +34,19 @@ stateDiagram-v2
     state CLOTUREE_RELUE <<final>>
 ```
 
+## Note sur l'état DEPOSE
+
+L'état DEPOSE est un état interne transitoire : la transition
+[*] → DEPOSE → (EN_ATTENTE | EN_ATTENTE_SANS_RELECTEUR) se produit
+dans la même transaction que le POST /api/exercices. Le statut DEPOSE
+n'est jamais observé par un client de l'API : la réponse 201 contient
+directement soit EN_ATTENTE (relecteur assigné), soit
+EN_ATTENTE_SANS_RELECTEUR (aucun candidat disponible).
+
+Cette simplification évite une race condition entre le dépôt de
+l'exercice et l'assignation du relecteur, et rend le comportement
+testable en un seul appel API.
+
 ## Description des transitions
 
 | De | Vers | Déclencheur | Règle |
