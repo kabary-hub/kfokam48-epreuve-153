@@ -252,7 +252,7 @@ Les colonnes « État actuel » reflètent l'état du dépôt au 25 septembre 20
 | Dépôt Git-lab (étape 5) | `github.com/kabary-hub/kfokam48-gitlab-153` | Public, séparé du projet |
 | Journal final | `docs/JOURNAL.md` | Étapes 1 à 6 renseignées |
 
-« Ces livrables couvrent les quatre piliers du barème : analyse (documents d'étape 1), produit (code backend et frontend), conduite du changement (mises à jour après enveloppe) et traçabilité (journal, CHANGELOG, SOUMISSION). »
+Ces livrables couvrent les quatre piliers du barème : analyse (documents d'étape 1), produit (code backend et frontend), conduite du changement (mises à jour après enveloppe) et traçabilité (journal, CHANGELOG, SOUMISSION).
 
 ## 10. Démarche prévue
 
