@@ -1,77 +1,66 @@
 package com.presencekf.backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "session")
+@Table(name = "sessions")
 public class Session {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
+    private String titre;
+
+    @Column(nullable = false, length = 6)
     private String code;
 
-    @Column(nullable = false)
-    private LocalDateTime debut;
+    @Column(name = "ouverture_at", nullable = false)
+    private LocalDateTime ouvertureAt;
 
-    @Column(nullable = false)
-    private LocalDateTime fin;
+    @Column(name = "expiration_at", nullable = false)
+    private LocalDateTime expirationAt;
 
-    @Column(nullable = false)
-    private boolean ouverte;
+    @Column(name = "cloture_at")
+    private LocalDateTime clotureAt;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Presence> presences = new ArrayList<>();
+    @Column(name = "promotion_id", nullable = false)
+    private Long promotionId;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Exercice> exercices = new ArrayList<>();
+    @Column(name = "formateur_id")
+    private Long formateurId;
 
-    public Session() {}
-
-    public Session(String code, LocalDateTime debut, LocalDateTime fin) {
-        this.code = code;
-        this.debut = debut;
-        this.fin = fin;
-        this.ouvertes = false;
-    }
+    // Getters et setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public String getTitre() { return titre; }
+    public void setTitre(String titre) { this.titre = titre; }
+
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
 
-    public LocalDateTime getDebut() { return debut; }
-    public void setDebut(LocalDateTime debut) { this.debut = debut; }
+    public LocalDateTime getOuvertureAt() { return ouvertureAt; }
+    public void setOuvertureAt(LocalDateTime ouvertureAt) { this.ouvertureAt = ouvertureAt; }
 
-    public LocalDateTime getFin() { return fin; }
-    public void setFin(LocalDateTime fin) { this.fin = fin; }
+    public LocalDateTime getExpirationAt() { return expirationAt; }
+    public void setExpirationAt(LocalDateTime expirationAt) { this.expirationAt = expirationAt; }
 
-    public boolean isOuverte() { return ouverte; }
-    public void setOuverte(boolean ouverte) { this.ouverte = ouverte; }
+    public LocalDateTime getClotureAt() { return clotureAt; }
+    public void setClotureAt(LocalDateTime clotureAt) { this.clotureAt = clotureAt; }
 
-    public List<Presence> getPresences() { return presences; }
-    public void setPresences(List<Presence> presences) { this.presences = presences; }
+    public Long getPromotionId() { return promotionId; }
+    public void setPromotionId(Long promotionId) { this.promotionId = promotionId; }
 
-    public List<Exercice> getExercices() { return exercices; }
-    public void setExercices(List<Exercice> exercices) { this.exercices = exercices; }
-
-    public void ajouterPresence(Presence presence) {
-        presences.add(presence);
-        presence.setSession(this);
-    }
-
-    public void ajouterExercice(Exercice exercice) {
-        exercices.add(exercice);
-        exercice.setSession(this);
-    }
-
-    public void fermer() {
-        this.ouverte = false;
-    }
+    public Long getFormateurId() { return formateurId; }
+    public void setFormateurId(Long formateurId) { this.formateurId = formateurId; }
 }
