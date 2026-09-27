@@ -116,36 +116,33 @@ Le client ne formule pas explicitement ces deux règles, mais elles découlent d
 Clôture manuelle (RG11, RG14) :
 La clôture de session est une action manuelle du formateur (Q12). Aucune clôture automatique n'est prévue. Les relectures deviennent définitives après clôture (RG14) ; les dépôts sont refusés après clôture (RG11).
 
-## 7. Zones d’ombre, hypothèses et contradictions
+## 7. Zones d'ombre, hypothèses et contradictions
 
-| Point | Réponse client ou trou | Décision retenue | Pourquoi / conséquence |
-|---|---|---|---|
-| Modification après envoi | Q10 autorise jusqu’à clôture ; Q15 dit définitive dès validation | Q10 prévaut | Q10 définit une borne métier explicite ; Q15 la contredit. La modification est exposée par une opération dédiée distincte du POST initial, sans altérer le POST imposé. |
-| Assignation et aucun candidat | Q7 ne dit pas quand assigner et ne couvre pas les sessions avec zéro candidat | Tirage au dépôt ; état en attente sans relecteur si nécessaire | Simple à comprendre et visible. Une nouvelle présence déclenche une tentative de réaffectation. |
-| Nombre d’exercices par relecteur | Q6 impose un seul relecteur par exercice, pas un seul exercice par relecteur | Limite d’un exercice à relire par étudiant et session | Choix candidat pour répartir la charge ; à distinguer explicitement d’une exigence client. |
-| Début de relecture | Q13 interdit le remplacement dès que la relecture « commence » sans définir le signal | Action explicite `demarrer` avant consultation du lien | Évite qu’un GET produise un effet de bord caché. L’API passe à `EN_COURS`. |
-| Réaffectation des exercices sans relecteur | Non défini | Chaque nouvelle présence déclenche le traitement des attentes | Évite de laisser une attente bloquée quand un candidat apparaît ensuite. |
-| Dépôt sans présence | Q12 permet le dépôt jusqu’à clôture ; Q7 réserve les relecteurs aux présents | Présence requise pour déposer | Hypothèse métier destinée à préserver le parcours de cours. |
-| Présence manuelle après expiration | Q14 autorise l’ajout manuel sans en préciser la fenêtre | Même fenêtre de 15 minutes | Règle conservatrice ; empêche que l’ajout manuel contourne la fermeture de présence. |
-| Q3 « fin de session » vs Q12 « clôture » | Formulations ambiguës | Fin du code = `expirationAt`; fin des dépôts = clôture automatique à `cloturePrevueAt` | Deux instants distincts ; l’auto-clôture est une extension choisie, contrairement au texte Q12 qui attribue la clôture au formateur. |
-| Identité et absence de mot de passe | Q1 exclut les mots de passe étudiants ; le contrat ne porte pas toutes les identités | Sélecteur dans le frontend et IDs d’acteur par en-têtes dédiés | Démonstration uniquement, sans authentification ni sécurité de production. |
-| Portée de l’anti-erreur | Q4 ne définit pas l’identité du blocage | Session navigateur identifiée par un ID temporaire transmis par le client ; blocage côté API à la cinquième erreur | Compromis prototype ; contournable par nouvelle session/identité et non adapté à une mise en production. |
-| Statut du blocage | Q4 ne spécifie pas le statut HTTP après cinq erreurs | Répondre `400` avec code `TROP_TENTATIVES` | Choix candidat ; distingué d’un code inconnu par le champ stable `code`. |
-| Durée de session vs API imposée | Le POST imposé ne prend pas la durée en entrée | `PUT /api/sessions/configuration` règle une durée globale à usage unique ; la dernière valeur remplace l’ancienne ; le POST consomme le réglage | Préserve les champs imposés au succès, mais ajoute une route et le statut d’extension `409 DUREE_SESSION_REQUISE` en l’absence de configuration. Le réglage global peut être écrasé par un autre formateur avant consommation. |
-| Arrêt du serveur pendant l’échéance | Un job planifié peut ne pas tourner si l’application est arrêtée | Au premier accès après redémarrage, rattraper et persister toute clôture dont l’échéance est passée | Requiert une vérification transactionnelle avant les opérations mutantes en plus du planificateur. |
-| Anonymat du relecteur | Q8 ne dit pas si le relecteur voit l’auteur | Masquer l’auteur au relecteur et le relecteur à l’auteur | Décision candidat, à appliquer aux DTO et aux listes, pas seulement à l’interface. |
-| Format du code | Aucune longueur/jeu de caractères spécifié | Six caractères alphanumériques | Choix explicite du candidat ; format et validation doivent être cohérents dans contrat, modèle et tests. |
-| Tableau Q16 | Q16 veut une présence à chaque session, l’API imposée ne donne qu’un total | Conserver `presences` et ajouter `presencesParSession`, une entrée par session avec présent/source | Extension du contrat nécessaire ; les absences sont explicites (`present=false`, `source=null`). |
-| Identification des exercices en attente | Q11 réclame de les voir, mais le tableau agrégé ne contient pas leur liste | Compteur `exercicesSansRelecteur` par étudiant auteur, plus liste d’affectations destinée au relecteur | Rend visibles les besoins sans faire recalculer les règles métier dans le frontend. |
-| Format du matricule | Le candidat communique « 153 », puis précise `kf48-153` ; le modèle d’exemple montre un format avec centre | Conserver `kf48-153` comme valeur communiquée ; vérifier qu’elle correspond au format de la plateforme | Ne pas inventer le suffixe de centre. Le nom du dépôt fourni reste `kfokam48-epreuve-153`. |
-| Commit préalable | LISEZ-MOI propose `[JALON] depart` pour tester le push ; le sujet ne le compte pas parmi les trois jalons évalués | Faire le test tel que demandé, puis les jalons évalués dans l’ordre | Le commit de départ ne remplace jamais `[JALON] analyse`, `[JALON] v0.1` ou `[JALON] v1.0`. |
-| Ordre du jalon v1.0 | Le sujet présente le jalon puis les livrables finaux | Suivre le choix du candidat : jalon avant CHANGELOG/README/backlog final | Le hash de soumission sera celui du dernier commit réel après ces documents, pas nécessairement le commit jalon. Risque de lisibilité/acceptation de « v1.0 » à assumer. |
-| Référentiels de démonstration | Sujet demande « quelques » données ; aucune volumétrie exacte | Jeu de démo réduit avec promotion, étudiants, formateur, session et exemples de présence/exercices/relectures | Éviter une app vide ; les 60 étudiants relèvent du test de performance, pas forcément de la démo. |
-| Réglage global concurrent | Une durée en attente est globale et peut être réglée par un autre formateur | La dernière valeur écrase l’ancienne et sera consommée par la prochaine ouverture, quel que soit le formateur | Limitation de prototype connue ; sans authentification, l’isolation entre formateurs est impossible dans cette conception. |
+### 7.1 — Contradictions relevées et tranchées
 
-### Contradiction Q10 / Q15 : décision détaillée
+| Réponses en conflit | Ce que j'ai choisi | Pourquoi |
+|---|---|---|
+| Q10 (« relecteur peut corriger tant que la session n'est pas clôturée ») vs Q15 (« la note est définitive une fois envoyée ») | Q10 l'emporte : la note reste modifiable tant que la session n'est pas clôturée ; seul le commentaire initial est immuable | Q10 décrit un mécanisme concret et conditionné, cohérent avec Q11 (l'existence d'un état « en attente » avant clôture). Q15 formule une intention générale (« c'est plus honnête ») sans mécanisme associé. La règle RG9 formalise cette décision. |
 
-Q10 autorise explicitement une correction jusqu’à la clôture de la session, alors que Q15 affirme que toute validation est définitive. La décision est de privilégier Q10 ; Q15 reste consignée comme contradiction. Le relecteur affecté peut modifier uniquement la note après son premier envoi ; le commentaire reste celui du premier envoi. Le contrat initial conserve le `POST /api/relectures/{id}` et son `409` si une deuxième soumission initiale est faite ; une route `PUT` distincte met à jour la note seule avant échéance. Cela préserve l’opération imposée sans la détourner.
+### 7.2 — Trous comblés par hypothèse raisonnable
+
+| Point non tranché par le client | Hypothèse retenue | Conséquence sur le modèle / l'API |
+|---|---|---|
+| Q7 (« relecteur choisi parmi les étudiants présents ») + Q12 (« dépôt possible jusqu'à clôture ») : que se passe-t-il si un exercice est déposé alors qu'aucun étudiant présent n'est disponible pour le relire (session à 1 étudiant, ou tous déjà relecteurs) ? | À la soumission, on choisit un relecteur parmi les étudiants présents (Presence existante pour la session), hors auteur, n'ayant pas déjà un exercice à relire. Si aucun candidat → relecteurId = null, statut = EN_ATTENTE_SANS_RELECTEUR, l'exercice reste visible dans le tableau (Q11) | Champ Exercice.relecteurId NULLABLE ; statut EN_ATTENTE_SANS_RELECTEUR ajouté ; EF6 et RG6 précisent ce cas |
+| Q1 (« pas de mot de passe, l'étudiant choisit son nom dans une liste ») + Q14 (« le formateur peut ajouter une présence manuellement ») : comment identifier le formateur sans authentification ? | Pas d'authentification. Le formateurId (et l'etudiantId) sont transmis en clair dans les requêtes, ou sélectionnés dans une liste côté frontend. C'est une simplification assumée pour l'épreuve | Aucun filtre de sécurité ; à documenter comme limite du périmètre en section 3 ; l'en-tête X-Formateur-Id peut être utilisé mais n'apporte aucune garantie de sécurité |
+| Q3 (« pas de présence après la fin de session ») + Q12 (« dépôt possible jusqu'à clôture ») : que signifie « fin de session » ? | On distingue expirationAt (= ouvertureAt + 15 min, fin du code de présence) et clotureAt (= clôture manuelle par le formateur). La présence est impossible après expirationAt ; le dépôt d'exercice est possible jusqu'à clotureAt | Deux champs distincts sur Session : expirationAt (dérivé) et clotureAt (nullable, rempli à la clôture) ; RG11 et RG14 s'y réfèrent |
+| Q13 (« remplacer le lien tant que personne n'a commencé à le relire ») : que signifie « commencé » ? | Un exercice est remplaçable tant que son statut est EN_ATTENTE (aucune note saisie). Dès qu'une note est rendue (statut RELUE), le lien est figé | Champ Exercice.statut utilisé comme verrou ; EF5 et RG12 formalisent cette condition |
+| Q16 (« voir combien d'exercices il a déposés, la moyenne des notes reçues, les relectures en attente ») : la moyenne inclut-elle les exercices non relus ? | La moyenne est calculée uniquement sur les exercices RELUS. Si aucun exercice n'a été relu, la moyenne est null (et non 0) | GET /api/tableau renvoie moyenne = null si aucun exercice relu ; ENF2 précise le calcul |
+| Q4 (« 5 erreurs → bloqué 2 minutes ») : le blocage est-il par étudiant, par session, ou global ? | Le blocage est par (etudiantId, sessionId) : 5 tentatives erronées consécutives sur une même session bloquent l'étudiant 2 minutes pour cette session uniquement | Ajout d'un compteur de tentatives et d'un timestamp de blocage côté service ; EF1 et RG3 s'y réfèrent |
+
+### 7.3 — Décisions structurantes
+
+- Le relecteur n'est pas une entité séparée : c'est un étudiant dans un état particulier (assigné à une relecture). Conséquence : table Relecture avec relecteurId → Etudiant, pas d'entité Relecteur.
+- Le code de présence est généré aléatoirement (SecureRandom, 6 caractères alphanumériques). Aucune liste prédéfinie.
+- Aucune clôture automatique : la session est clôturée manuellement par le formateur (RG11, RG14, Q12).
+- Toutes les erreurs respectent le format {code, message} imposé par le contrat d'API, sans exception.
+
+Toutes les hypothèses ci-dessus sont documentées comme décisions assumées du candidat, conformément à la règle du sujet : « S'il te manque une information, décide à la place du client et écris-le dans la section 7 de ton cahier des charges. »
 
 ## 8. Contraintes techniques
 
