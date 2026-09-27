@@ -27,14 +27,15 @@ hs_err_pid*
 !.env.example
 application-local.properties
 
-# Local recovery copy
+# Dossiers de sauvegarde locale
 _sauvegarde_local/
+_sauvegarde_local_*/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Documents fournis par l'épreuve (ne pas committer)
+# Documents fournis par l'épreuve
 /CLIENT.md
 /LISEZ-MOI.md
 /LISEZ-MOI_CANDIDAT_KFOKAM48.pdf
