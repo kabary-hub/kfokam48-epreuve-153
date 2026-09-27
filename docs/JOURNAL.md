@@ -46,11 +46,11 @@
 
 ## Étape 2 — Première version
 
-**Fait :**
+**Fait :** Backend M1 (#15) livré : entité `Session` conforme à D2 (`5b91678`), DTO `SessionCreateDto`/`SessionResponseDto` (`9a6d14e`), service avec génération d’un code de 6 caractères et expiration à +15 min (RG1, `e7611fd`), contrôleur `POST /api/sessions` → 201 (EF2, B2, `fd43926`). Ajout de la gestion globale B4 (`bdfd510`) et des migrations Flyway V1/V2 avec `ddl-auto=none` (B5, `3e4e6c1`). Le repository a été nettoyé (`5311e7f`). Les tests couvrent RG1, le contrat MVC et l’endpoint en contexte Spring Boot sur H2 : 7 tests passent. Wrapper Maven ajouté (B1, `3ad0f66`). Frontend M1 : couche API dédiée, hook `useAsync`, formulaire titre/promotion avec états de chargement et d’erreur; `npm run build` réussit (`df49579`). Choix Flyway et wrapper documentés dans le CDC (`0d69fdb`).
 
-**Bloqué :**
+**Bloqué :** Deux problèmes rencontrés puis résolus : (1) les coordonnées Flyway PostgreSQL sans version explicite n’étaient pas gérées par Spring Boot 3.2.0; choix retenu après vérification du build : Flyway 9 avec `flyway-core` seul (`3870e5f`). Le commit intermédiaire `22d7082` a ensuite été corrigé. (2) Surefire ne détectait pas le suffixe `IT`; le test Spring Boot a été renommé `SessionControllerSpringBootTest` afin que `mvn test` exécute toute la suite (`f3269c5`). Durées perdues non mesurées.
 
-**IA :**
+**IA :** Freebuff a présenté les options de dépendance Flyway; j’ai retenu Flyway 9 avec `flyway-core` seul après l’échec Maven sur les modules PostgreSQL sans version, puis validé le choix par `./mvnw test` (7 tests) et `./mvnw clean compile`. La détection Surefire a été vérifiée en lançant la suite complète après renommage. Les changements ont été contrôlés par rapport au contrat API et au CDC.
 
 ## Étape 3 — Enveloppe
 
