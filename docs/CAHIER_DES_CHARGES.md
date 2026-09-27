@@ -90,38 +90,31 @@ Justification :
 
 | Réf | Règle | Source |
 |---|---|---|
-| RG1 | Le code expire 15 minutes après l’ouverture de la session | Q2 |
-| RG2 | Une présence par étudiant et par session au maximum | Implicite au besoin ; unicité technique nécessaire |
-| RG3 | L’étudiant ne peut pas marquer sa présence après expiration du code | Q3, interprété avec Q2 |
-| RG4 | Après cinq erreurs de code, la session navigateur est bloquée deux minutes à partir de la cinquième erreur | Q4 + choix candidat |
-| RG5 | Une présence manuelle porte la source `FORMATEUR` ; une présence par code porte `ETUDIANT` | Q14 + contrat |
-| RG6 | Un exercice ne peut avoir qu’un seul relecteur affecté | Q6 |
-| RG7 | L’auteur ne peut jamais être son propre relecteur | Q5 |
-| RG8 | Le relecteur est tiré au hasard parmi les étudiants présents à cette session, hors auteur | Q7 |
-| RG9 | Le relecteur peut rendre une note entière comprise entre 0 et 20 | Q9 |
-| RG10 | L’auteur voit sa note et son commentaire, mais pas le nom du relecteur | Q8 |
-| RG11 | Une relecture non démarrée/non rendue reste en attente et doit être visible au formateur | Q11 |
-| RG12 | Un étudiant peut déposer après la fin du code de présence, mais seulement jusqu’à clôture | Q12 ; présence exigée comme décision projet |
-| RG13 | Le lien ne peut être remplacé après le démarrage explicite de la relecture | Q13 + décision candidat sur le démarrage explicite |
-| RG14 | Le relecteur affecté peut modifier uniquement la note tant que la session n’est pas clôturée ; le commentaire initial reste inchangé et la relecture est figée après clôture | Q10 choisi contre Q15 ; portée précisée par le candidat |
-| RG15 | La clôture automatique interdit ensuite les dépôts et toutes les mutations liées à la session | Décision candidat, extension de Q12/EF11 |
-| RG16 | La présence manuelle est soumise à la même fenêtre de 15 minutes que le code | Choix candidat ; hypothèse conservatrice |
-| RG17 | Un étudiant ne reçoit au maximum qu’un exercice à relire par session | Hypothèse candidat, non exprimée par Q6/Q7 |
-| RG18 | Si aucun relecteur n’est disponible au dépôt, l’exercice reste sans relecteur ; chaque nouvelle présence déclenche une tentative d’affectation des attentes | Trou Q7 + choix candidat |
-| RG19 | Le code comporte six caractères alphanumériques | Choix candidat, non imposé dans les pièces |
-| RG20 | La moyenne est calculée par l’API, arrondie à deux décimales ; elle vaut `null` sans note reçue | Q16 + choix candidat et contrat |
-| RG21 | Pour s’identifier dans le prototype, les interfaces utilisent des sélecteurs et transmettent les IDs d’acteur par en-têtes ; cela ne constitue pas une authentification | Q1 + choix candidat |
-| RG22 | La durée de session est un réglage global à usage unique, obligatoire avant ouverture, entre 15 et 480 minutes, sans défaut ; une nouvelle valeur remplace toute valeur en attente | Décision candidat |
-| RG23 | À l’échéance, un planificateur clôt la session ; si le serveur était arrêté, toute requête après redémarrage clôt les sessions échues avant d’autoriser une mutation | Décision candidat |
-| RG24 | La relecture est anonyme dans les deux sens : ni l’auteur n’identifie le relecteur ni le relecteur l’auteur | Décision candidat ; Q8 ne précisait que le premier sens |
-| RG25 | Le relecteur affecté peut modifier uniquement la note jusqu’à clôture ; le commentaire reste celui du premier envoi | Décision candidat clarifiant Q10 |
-| RG26 | Le POST d’ouverture sans durée globale préconfigurée renvoie `409 DUREE_SESSION_REQUISE` | Décision candidat ; extension au contrat initial |
+| RG1 | Un code de présence expire 15 minutes après l'ouverture de la session | Q2 |
+| RG2 | Un étudiant ne peut pas marquer sa présence après l'expiration du code | Q3 |
+| RG3 | Après 5 tentatives de code erronées consécutives, l'étudiant est bloqué pendant 2 minutes | Q4 |
+| RG4 | Un étudiant ne peut jamais relire son propre exercice | Q5 |
+| RG5 | Un exercice a exactement un seul relecteur | Q6 |
+| RG6 | Le relecteur est choisi au hasard parmi les étudiants présents à la session (hors auteur) | Q7 |
+| RG7 | L'étudiant relu voit la note et le commentaire, mais jamais le nom ni l'identifiant du relecteur | Q8 |
+| RG8 | La note est un entier compris entre 0 et 20 inclus | Q9 |
+| RG9 | Une relecture rendue est modifiable tant que la session n'est pas clôturée (Q10 l'emporte sur Q15) ; seul le commentaire initial reste immuable | Q10 > Q15 |
+| RG10 | Un exercice sans relecture rendue reste au statut EN_ATTENTE et apparaît comme tel dans le tableau | Q11 |
+| RG11 | Un exercice peut être déposé jusqu'à la clôture manuelle de la session par le formateur | Q12 |
+| RG12 | Le lien d'un exercice est remplaçable tant qu'aucune relecture n'a été rendue (statut EN_ATTENTE) | Q13 |
+| RG13 | Une présence ajoutée manuellement par le formateur porte source = FORMATEUR et est distinguable dans le tableau | Q14 |
+| RG14 | Après clôture de la session par le formateur, une relecture rendue est définitive et non modifiable | Q15 corrigée par Q10 |
+| RG15 | Un étudiant ne peut être présent qu'une seule fois par session (unicité) | implicite (déduit de Q2) |
+| RG16 | Un étudiant ne peut déposer qu'un seul exercice par session (unicité) | implicite (déduit de Q4) |
 
-### Statuts proposés
+Décision Q10 > Q15 :
+Q10 indique qu'une relecture est modifiable tant que la session n'est pas clôturée. Q15 affirme qu'une note envoyée est définitive. Ces deux réponses se contredisent. Q10 l'emporte car : (1) Q11 décrit un usage concret du formateur qui implique un état intermédiaire avant clôture, (2) Q10 décrit un mécanisme conditionné et précis, (3) Q15 formule une intention générale (« c'est plus honnête ») sans mécanisme. Conséquence : seule la note est modifiable avant clôture ; le commentaire initial reste immuable.
 
-- Session : `OUVERTE`, `CLOTUREE`. `expirationAt` gouverne la fenêtre du code à +15 min ; `cloturePrevueAt` est calculée à partir de la durée configurée ; un planificateur ferme la session à l’échéance. L’échéance est figée à la création.
-- Exercice/relecture : `EN_ATTENTE_SANS_RELECTEUR`, `EN_ATTENTE`, `EN_COURS`, `RELUE`. Une session clôturée verrouille les modifications sans nécessairement changer le statut affiché.
-- Source de présence : `ETUDIANT`, `FORMATEUR`.
+Unicité implicite (RG15, RG16) :
+Le client ne formule pas explicitement ces deux règles, mais elles découlent du modèle : une présence par étudiant et par session (sinon le tableau est faussé), et un exercice par étudiant et par session (sinon l'assignation d'un relecteur devient ambiguë). Ces règles sont documentées ici comme hypothèses raisonnables.
+
+Clôture manuelle (RG11, RG14) :
+La clôture de session est une action manuelle du formateur (Q12). Aucune clôture automatique n'est prévue. Les relectures deviennent définitives après clôture (RG14) ; les dépôts sont refusés après clôture (RG11).
 
 ## 7. Zones d’ombre, hypothèses et contradictions
 
