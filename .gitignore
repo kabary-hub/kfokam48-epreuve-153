@@ -33,3 +33,13 @@ _sauvegarde_local/
 # OS
 .DS_Store
 Thumbs.db
+
+# Documents fournis par l'épreuve (ne pas committer)
+/CLIENT.md
+/LISEZ-MOI.md
+/LISEZ-MOI_CANDIDAT_KFOKAM48.pdf
+/SUJET.md
+/SUJET.pdf
+/modeles/
+/enveloppe
+/git-lab.bundle
