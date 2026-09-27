@@ -1,55 +1,88 @@
 # D3 — Séquence : marquer sa présence
 
+**Cas d'utilisation** : UC5 (Marquer sa présence avec un code)  
+**Endpoint** : `POST /api/presences`  
+**Acteurs** : Étudiant (via le frontend React), PresenceController, PresenceService, PresenceRepository.  
+**Règles couvertes** : RG1 (expiration 15 min), RG2 (pas après expiration), RG3 (blocage 5 erreurs / 2 min), RG15 (unicité présence).
+
+## Scénario nominal
+
 ```mermaid
 sequenceDiagram
-    actor E as Étudiant
-    participant UI as Frontend React
-    participant API as API Spring
+    autonumber
+    participant E as Étudiant
+    participant F as Frontend (React)
+    participant C as PresenceController
     participant S as PresenceService
-    participant DB as PostgreSQL
+    participant R as PresenceRepository
 
-    E->>UI: choisit son identité et saisit le code
-    UI->>API: POST /api/presences\n(code, etudiantId) + headers navigateur
-    API->>S: enregistrerPresence(code, etudiantId, navigateurId)
-    S->>DB: rechercher session du code
-    alt code inconnu
-        DB-->>S: aucune session
-        S-->>API: CodeInconnu
-        API-->>UI: 400 {code: CODE_INCONNU, message}
-    else session trouvée, code expiré
-        DB-->>S: session.expirationAt <= maintenant
-        S-->>API: CodeExpire
-        API-->>UI: 410 {code: CODE_EXPIRE, message}
-    else étudiant déjà présent
-        S->>DB: vérifier unicité sessionId + etudiantId
-        DB-->>S: présence existante
-        S-->>API: DejaPresent
-        API-->>UI: 409 {code: DEJA_PRESENT, message}
-    else cinquième erreur de saisie dans la session navigateur
-        S->>S: incrémenter le compteur de la session navigateur
-        alt 5e erreur puis encore erreur
-            S-->>API: TentativesBloquees
-            API-->>UI: 400 {code: TROP_TENTATIVES, message}
-        else 5e erreur et demande suivante valide
-            S->>DB: réinitialiser la session navigateur
-            S->>API: validation normale
-        end
-    else cas nominal
-        S->>DB: insérer présence(source=ETUDIANT)
-        DB-->>S: présence créée
-        S-->>API: présence DTO
-        API-->>UI: 201 {id, sessionId, etudiantId, source}
-        UI-->>E: confirme la présence
-    end
+    E->>F: saisit le code de présence
+    F->>C: POST /api/presences {code, etudiantId}
+    C->>S: enregistrer(code, etudiantId)
+    S->>R: findByCode(code)
+    R-->>S: Session (valide)
+    S->>S: vérifier expiration (RG1)
+    S->>R: existsBySessionAndEtudiant(session, etudiant)
+    R-->>S: false
+    S->>R: save(Presence)
+    R-->>S: Presence
+    S-->>C: Presence
+    C-->>F: 201 Created {id, sessionId, etudiantId, source: "ETUDIANT"}
+    F-->>E: confirmation, présence visible
 ```
 
-## Conformité du contrat
+## Scénarios d'erreur
 
-- Succès : `201`.
-- Erreurs contractuelles : code inconnu `400`, déjà présent `409`, code expiré `410`.
-- L’extension du candidat utilise toujours `400` pour la cinquième tentative, avec `code: TROP_TENTATIVES`.
-- Le schéma d’erreur, `{ "code": "…" , "message": "…" }`, est imposé pour toutes les erreurs, sans exception, comme indiqué dans le sujet.
+```mermaid
+sequenceDiagram
+    autonumber
+    participant E as Étudiant
+    participant F as Frontend (React)
+    participant C as PresenceController
+    participant S as PresenceService
+    participant R as PresenceRepository
 
-## Portée du compteur Q4
+    E->>F: saisit un code inconnu
+    F->>C: POST /api/presences {code, etudiantId}
+    C->>S: enregistrer(code, etudiantId)
+    S->>R: findByCode(code)
+    R-->>S: aucune session
+    S-->>C: CodeInconnu
+    C-->>F: 400 Bad Request {code: "CODE_INCONNU", message: "Code de présence inconnu."}
+    F-->>E: affiche l'erreur en français
 
-La décision du candidat est explicite : toute erreur serving (code inconnu, code expiré, présence déjà enregistrée) incrémente le compteur. Une fois la cinquième erreur atteinte, le reste des tentatives de cette session navigateur est bloqué deux minutes.
+    E->>F: saisit un code expiré
+    F->>C: POST /api/presences {code, etudiantId}
+    C->>S: enregistrer(code, etudiantId)
+    S->>R: findByCode(code)
+    R-->>S: Session expirée (expirationAt dépassée, RG1/RG2)
+    S-->>C: CodeExpire
+    C-->>F: 410 Gone {code: "CODE_EXPIRE", message: "Le code de présence a expiré."}
+    F-->>E: affiche l'erreur en français
+
+    E->>F: saisit un code valide déjà utilisé pour cette session
+    F->>C: POST /api/presences {code, etudiantId}
+    C->>S: enregistrer(code, etudiantId)
+    S->>R: findByCode(code)
+    R-->>S: Session valide
+    S->>R: existsBySessionAndEtudiant(session, etudiant)
+    R-->>S: true (RG15)
+    S-->>C: DejaPresent
+    C-->>F: 409 Conflict {code: "DEJA_PRESENT", message: "Cet étudiant est déjà présent."}
+    F-->>E: affiche l'erreur en français
+```
+
+## Codes HTTP imposés par le contrat
+
+| Résultat | Statut HTTP | Code d'erreur |
+|---|---:|---|
+| Présence enregistrée | 201 Created | — |
+| Code inconnu | 400 Bad Request | `CODE_INCONNU` |
+| Présence déjà enregistrée pour l'étudiant et la session | 409 Conflict | `DEJA_PRESENT` |
+| Code expiré | 410 Gone | `CODE_EXPIRE` |
+
+Toutes les réponses d'erreur utilisent le format JSON `{ "code": "...", "message": "..." }`, avec un message lisible en français, et ne contiennent aucune stack trace.
+
+## Règle RG3 — blocage après erreurs répétées
+
+Après cinq tentatives erronées consécutives, l'étudiant est bloqué pendant deux minutes conformément à Q4/RG3. Le contrat imposé pour `POST /api/presences` ne définit pas de statut HTTP ni de code d'erreur pour ce blocage ; ce cas sera décrit comme extension dans `api/contrat.yaml` avant son implémentation, sans modifier les statuts imposés ci-dessus.
