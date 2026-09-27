@@ -1,67 +1,77 @@
-import React, { useState } from 'react';
-import { SessionService } from '../services/SessionService';
+import { useState, type FormEvent } from 'react';
+import { ouvrirSession, type SessionResponseDto } from '../api/sessionsApi';
+import { useAsync } from '../hooks/useAsync';
 
-interface SessionFormProps {
-  onSessionCreated: (session: any) => void;
-}
+/**
+ * Formulaire d'ouverture de session (M1, EF2).
+ *
+ * Champs :
+ * - titre (texte)
+ * - promotionId (sélection dans une liste — Q1 : pas d'auth, l'étudiant
+ *   choisit son nom dans une liste, idem pour la promotion)
+ *
+ * Affiche :
+ * - le code généré + horaires en cas de succès
+ * - l'erreur {code, message} en cas d'échec
+ */
+export function SessionForm() {
+  const [titre, setTitre] = useState('');
+  const [promotionId, setPromotionId] = useState(1);
+  const { data, loading, error, run } = useAsync<SessionResponseDto>();
 
-export const SessionForm: React.FC<SessionFormProps> = ({ onSessionCreated }) => {
-  const [code, setCode] = useState('');
-  const [debut, setDebut] = useState('');
-  const [fin, setFin] = useState('');
-  const [message, setMessage] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      const session = await SessionService.ouvrirSession({
-        code,
-        debut: new Date(debut),
-        fin: new Date(fin)
-      });
-      setMessage('Session créée avec succès !');
-      onSessionCreated(session);
-      setCode('');
-      setDebut('');
-      setFin('');
-    } catch (error: any) {
-      setMessage(error.response?.data?.message || 'Erreur lors de la création');
-    }
+    await run(() => ouvrirSession({ titre, promotionId }));
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
+    <div className="session-form">
       <h2>Ouvrir une session</h2>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      <div style={{ marginBottom: '10px' }}>
-        <label>Code de la session:</label>
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Ex: S2024-001"
-          required
-        />
-      </div>
-      <div style={{ marginBottom: '10px' }}>
-        <label>Début:</label>
-        <input
-          type="datetime-local"
-          value={debut}
-          onChange={(e) => setDebut(e.target.value)}
-          required
-        />
-      </div>
-      <div style={{ marginBottom: '10px' }}>
-        <label>Fin:</label>
-        <input
-          type="datetime-local"
-          value={fin}
-          onChange={(e) => setFin(e.target.value)}
-          required
-        />
-      </div>
-      <button type="submit">Créer la session</button>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="titre">Titre de la session</label>
+          <input
+            id="titre"
+            type="text"
+            value={titre}
+            onChange={(e) => setTitre(e.target.value)}
+            required
+            maxLength={255}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="promotionId">Promotion</label>
+          <select
+            id="promotionId"
+            value={promotionId}
+            onChange={(e) => setPromotionId(Number(e.target.value))}
+          >
+            <option value={1}>KFOKAM48 — Promotion 2026</option>
+          </select>
+        </div>
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Ouverture…' : 'Ouvrir une session'}
+        </button>
+      </form>
+
+      {error && (
+        <div role="alert" className="error">
+          <strong>{error.code}</strong> : {error.message}
+        </div>
+      )}
+
+      {data && (
+        <div className="success">
+          <p>Session ouverte avec succès.</p>
+          <p>
+            Code de présence : <strong>{data.code}</strong>
+          </p>
+          <p>Ouverture : {new Date(data.ouvertureAt).toLocaleString()}</p>
+          <p>Expiration : {new Date(data.expirationAt).toLocaleString()}</p>
+        </div>
+      )}
+    </div>
   );
-};
+}

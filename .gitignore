@@ -9,6 +9,7 @@ hs_err_pid*
 !/backend/.mvn/wrapper/maven-wrapper.jar
 
 # Node / frontend
+/frontend/.vite/
 /frontend/node_modules/
 /frontend/dist/
 /frontend/build/
