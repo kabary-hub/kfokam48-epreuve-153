@@ -22,6 +22,7 @@ paths:
     get:
       tags: [Étudiants]
       summary: Lister les promotions pour le sélecteur
+      description: Extension de lecture nécessaire aux sélecteurs du prototype ; aucune authentification n'est implémentée (Q1).
       responses:
         '200':
           description: Promotions disponibles
@@ -35,6 +36,7 @@ paths:
     get:
       tags: [Sessions]
       summary: Lister les sessions d’une promotion
+      description: Extension de lecture pour le tableau et la navigation des sessions.
       parameters:
         - name: promotionId
           in: query
@@ -97,6 +99,7 @@ paths:
     get:
       tags: [Sessions]
       summary: Consulter les détails d’une session et son échéance
+      description: Extension de lecture sans authentification (Q12).
       parameters:
         - $ref: '#/components/parameters/Id'
       responses:
@@ -104,13 +107,23 @@ paths:
           description: Session consultée
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionDetail' }
+              schema:
+                type: object
+                required: [id, titre, code, ouvertureAt, expirationAt, clotureAt]
+                properties:
+                  id: { type: integer, format: int64 }
+                  titre: { type: string }
+                  code: { type: string }
+                  ouvertureAt: { type: string, format: date-time }
+                  expirationAt: { type: string, format: date-time }
+                  clotureAt: { type: string, format: date-time, nullable: true }
         '404': { $ref: '#/components/responses/Erreur' }
 
   /api/sessions/{id}/exercices:
     get:
       tags: [Exercices]
       summary: Lister les dépôts d’une session pour le tableau du formateur
+      description: Extension de lecture permettant au formateur d'examiner les exercices déposés conformément à Q11 et Q16.
       parameters:
         - $ref: '#/components/parameters/Id'
       responses:
@@ -126,7 +139,8 @@ paths:
   /api/etudiants:
     get:
       tags: [Étudiants]
-      summary: Lister les étudiants d’une promotion pour le sélecteur
+      summary: Lister les étudiants d’une promotion pour le sélecteur (Q1)
+      description: Extension de lecture pour permettre à l'étudiant de choisir son nom dans une liste ; aucune authentification n'est implémentée.
       parameters:
         - name: promotionId
           in: query
@@ -139,7 +153,12 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Etudiant' }
+                items:
+                  type: object
+                  required: [id, nom]
+                  properties:
+                    id: { type: integer, format: int64 }
+                    nom: { type: string }
         '404': { $ref: '#/components/responses/Erreur' }
 
   /api/presences:
@@ -188,7 +207,14 @@ paths:
           description: Présence créée avec source FORMATEUR
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Presence' }
+              schema:
+                type: object
+                required: [id, sessionId, etudiantId, source]
+                properties:
+                  id: { type: integer, format: int64 }
+                  sessionId: { type: integer, format: int64 }
+                  etudiantId: { type: integer, format: int64 }
+                  source: { type: string, enum: [FORMATEUR] }
         '400': { $ref: '#/components/responses/Erreur' }
         '404': { $ref: '#/components/responses/Erreur' }
         '409': { $ref: '#/components/responses/Erreur' }
@@ -225,12 +251,33 @@ paths:
         '409': { $ref: '#/components/responses/Erreur' }
 
   /api/exercices/{id}:
-    put:
+    get:
       tags: [Exercices]
-      summary: Remplacer le lien de l'exercice avant qu'une relecture soit rendue (Q13)
+      summary: L’auteur consulte son exercice et son résultat sans identité du relecteur (Q8)
+      description: Extension de lecture pour l'étudiant relu (EF10). Le prototype ne met pas en œuvre d'authentification (Q1).
       parameters:
         - $ref: '#/components/parameters/Id'
-        - $ref: '#/components/parameters/EtudiantId'
+      responses:
+        '200':
+          description: Détails visibles à l’auteur, sans identité du relecteur
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, statut, lien, note, commentaire]
+                properties:
+                  id: { type: integer, format: int64 }
+                  statut: { type: string, enum: [DEPOSE, EN_ATTENTE, EN_ATTENTE_SANS_RELECTEUR, RELUE] }
+                  lien: { type: string, format: uri }
+                  note: { type: integer, minimum: 0, maximum: 20, nullable: true }
+                  commentaire: { type: string, nullable: true }
+        '404': { $ref: '#/components/responses/Erreur' }
+    put:
+      tags: [Exercices]
+      summary: Remplacer le lien avant qu'une relecture soit rendue (Q13, EF5)
+      description: Extension ; autorisée avant la première relecture rendue, y compris en attente sans relecteur.
+      parameters:
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
@@ -257,53 +304,12 @@ paths:
         '403': { $ref: '#/components/responses/Erreur' }
         '404': { $ref: '#/components/responses/Erreur' }
         '409': { $ref: '#/components/responses/Erreur' }
-    get:
-      tags: [Exercices]
-      summary: L’auteur consulte son exercice et son résultat sans identité du relecteur
-      parameters:
-        - $ref: '#/components/parameters/Id'
-        - $ref: '#/components/parameters/EtudiantId'
-      responses:
-        '200':
-          description: Détails visibles à l’auteur
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ExerciceAuteur' }
-        '403': { $ref: '#/components/responses/Erreur' }
-        '404': { $ref: '#/components/responses/Erreur' }
-    put:
-      tags: [Exercices]
-      summary: Remplacer le lien avant le démarrage de la relecture
-      parameters:
-        - $ref: '#/components/parameters/Id'
-        - $ref: '#/components/parameters/EtudiantId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: false
-              required: [lien]
-              properties:
-                lien: { type: string, format: uri }
-      responses:
-        '200':
-          description: Lien remplacé
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ExerciceAuteur' }
-        '400': { $ref: '#/components/responses/Erreur' }
-        '403': { $ref: '#/components/responses/Erreur' }
-        '404': { $ref: '#/components/responses/Erreur' }
-        '409': { $ref: '#/components/responses/Erreur' }
 
   /api/relectures:
     get:
       tags: [Relectures]
       summary: Lister les relectures anonymisées attribuées à l’étudiant
-      parameters:
-        - $ref: '#/components/parameters/EtudiantId'
+      description: Extension utile au parcours relecteur ; aucune authentification n'est implémentée dans le prototype.
       responses:
         '200':
           description: Liens et états des exercices, sans nom ni ID de l’auteur
@@ -318,9 +324,9 @@ paths:
     post:
       tags: [Relectures]
       summary: Démarrer explicitement une relecture affectée
+      description: Extension utile pour verrouiller le lien avant qu'une relecture soit rendue (Q13).
       parameters:
         - $ref: '#/components/parameters/Id'
-        - $ref: '#/components/parameters/EtudiantId'
       responses:
         '200':
           description: Relecture démarrée
@@ -337,7 +343,6 @@ paths:
       summary: Soumettre une première note et son commentaire (opération imposée)
       parameters:
         - $ref: '#/components/parameters/Id'
-        - $ref: '#/components/parameters/EtudiantId'
       requestBody:
         required: true
         content:
@@ -350,10 +355,10 @@ paths:
         '409': { $ref: '#/components/responses/Erreur' }
     put:
       tags: [Relectures]
-      summary: Modifier uniquement la note jusqu’à l’échéance de session
+      summary: Modifier uniquement la note jusqu'à la clôture manuelle de la session (Q10, EF8)
+      description: Extension requise par Q10 ; le commentaire initial reste immuable après la première soumission. Après la clôture manuelle (Q12), la note devient définitive.
       parameters:
         - $ref: '#/components/parameters/Id'
-        - $ref: '#/components/parameters/EtudiantId'
       requestBody:
         required: true
         content:
@@ -406,12 +411,6 @@ components:
       in: path
       required: true
       schema: { type: integer, format: int64 }
-    EtudiantId:
-      name: X-Etudiant-Id
-      in: header
-      required: true
-      description: Identifiant de démonstration uniquement ; ne fournit pas une authentification.
-      schema: { type: integer, format: int64 }
 
   schemas:
     Erreur:
@@ -431,10 +430,11 @@ components:
         source: { type: string, enum: [ETUDIANT, FORMATEUR] }
     SessionDetail:
       type: object
-      required: [id, titre, promotionId, ouvertureAt, expirationAt, clotureAt, statut]
+      required: [id, titre, code, promotionId, ouvertureAt, expirationAt, clotureAt, statut]
       properties:
         id: { type: integer, format: int64 }
         titre: { type: string }
+        code: { type: string }
         promotionId: { type: integer, format: int64 }
         ouvertureAt: { type: string, format: date-time }
         expirationAt: { type: string, format: date-time, description: Expiration fixe du code, 15 minutes après l’ouverture. }
