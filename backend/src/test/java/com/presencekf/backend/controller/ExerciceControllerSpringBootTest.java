@@ -146,6 +146,28 @@ class ExerciceControllerSpringBootTest {
     }
 
     @Test
+    void postExercices_sessionCloturee_doitRetourner409() throws Exception {
+        Session session = sessionRepository.findById(sessionId).orElseThrow();
+        session.setClotureAt(LocalDateTime.now());
+        sessionRepository.save(session);
+
+        String body = """
+                {
+                    "sessionId": %d,
+                    "etudiantId": 1,
+                    "lien": "https://exemple.com/exercice1"
+                }
+                """.formatted(sessionId);
+
+        mockMvc.perform(post("/api/exercices")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SESSION_CLOTUREE"))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
     void postExercices_sessionInconnue_doitRetourner404() throws Exception {
         String body = """
                 {
