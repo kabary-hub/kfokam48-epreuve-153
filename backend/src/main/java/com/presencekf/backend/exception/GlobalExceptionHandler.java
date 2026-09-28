@@ -73,6 +73,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Session inexistante pour l'ajout manuel → 404 SESSION_INCONNUE (M3).
+     */
+    @ExceptionHandler(SessionInconnueException.class)
+    public ResponseEntity<Map<String, String>> handleSessionInconnue(SessionInconnueException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "code", "SESSION_INCONNUE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /**
      * Étudiant déjà présent → 409 DEJA_PRESENT (M2, RG15)
      */
     @ExceptionHandler(DejaPresentException.class)
