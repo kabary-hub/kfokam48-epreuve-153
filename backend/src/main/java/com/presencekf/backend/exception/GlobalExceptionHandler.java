@@ -158,6 +158,16 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    /** Promotion inexistante pour le tableau → 404 PROMOTION_INCONNUE (M7). */
+    @ExceptionHandler(PromotionInconnueException.class)
+    public ResponseEntity<Map<String, String>> handlePromotionInconnue(
+            PromotionInconnueException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "code", "PROMOTION_INCONNUE",
+                "message", ex.getMessage()
+        ));
+    }
+
     /**
      * Filet de sécurité — toute autre erreur non gérée → 500 ERREUR_INTERNE
      * Aucune stack trace n'est renvoyée au client (B4).
