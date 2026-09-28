@@ -1,41 +1,79 @@
 package com.presencekf.backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
+import java.time.LocalDateTime;
+
+/**
+ * Entité Exercice, mappée sur la table `exercices` de la migration V1.
+ *
+ * Champs :
+ * - id, sessionId, etudiantId, lien, statut, relecteurId (nullable), deposeAt
+ *
+ * Contrainte d'unicité : (sessionId, etudiantId) → RG16 (1 exercice par
+ * étudiant et par session).
+ *
+ * Statuts possibles : EN_ATTENTE, EN_ATTENTE_SANS_RELECTEUR, RELUE.
+ * (DEPOSE est un état transitoire interne, jamais persisté).
+ */
 @Entity
-@Table(name = "exercice")
+@Table(
+    name = "exercices",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_exercice_session_etudiant",
+        columnNames = {"session_id", "etudiant_id"}
+    )
+)
 public class Exercice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "session_id", nullable = false)
+    private Long sessionId;
+
+    @Column(name = "etudiant_id", nullable = false)
+    private Long etudiantId;
+
+    @Column(nullable = false, length = 500)
     private String lien;
 
-    @Column(nullable = false)
-    private String etudiant;
+    @Column(nullable = false, length = 30)
+    private String statut;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
+    @Column(name = "relecteur_id")
+    private Long relecteurId;
 
-    public Exercice() {}
+    @Column(name = "depose_at", nullable = false)
+    private LocalDateTime deposeAt;
 
-    public Exercice(String lien, String etudiant) {
-        this.lien = lien;
-        this.etudiant = etudiant;
-    }
+    // Getters et setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public Long getSessionId() { return sessionId; }
+    public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
+
+    public Long getEtudiantId() { return etudiantId; }
+    public void setEtudiantId(Long etudiantId) { this.etudiantId = etudiantId; }
+
     public String getLien() { return lien; }
     public void setLien(String lien) { this.lien = lien; }
 
-    public String getEtudiant() { return etudiant; }
-    public void setEtudiant(String etudiant) { this.etudiant = etudiant; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
 
-    public Session getSession() { return session; }
-    public void setSession(Session session) { this.session = session; }
+    public Long getRelecteurId() { return relecteurId; }
+    public void setRelecteurId(Long relecteurId) { this.relecteurId = relecteurId; }
+
+    public LocalDateTime getDeposeAt() { return deposeAt; }
+    public void setDeposeAt(LocalDateTime deposeAt) { this.deposeAt = deposeAt; }
 }
