@@ -5,6 +5,7 @@ import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.CodeExpireException;
 import com.presencekf.backend.exception.CodeInconnuException;
 import com.presencekf.backend.exception.DejaPresentException;
+import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.exception.TropTentativesException;
 import com.presencekf.backend.repository.PresenceRepository;
 import com.presencekf.backend.repository.SessionRepository;
@@ -82,6 +83,37 @@ public class PresenceService {
         Presence saved = presenceRepository.save(presence);
         reinitialiserTentatives(etudiantId);
         return saved;
+    }
+
+    /**
+     * Enregistre une présence ajoutée manuellement par le formateur (M3, EF3).
+     *
+     * La présence porte source = "FORMATEUR" (RG13, Q14).
+     *
+     * @param sessionId  l'identifiant de la session
+     * @param etudiantId l'identifiant de l'étudiant
+     * @return la Presence créée
+     * @throws SessionInconnueException si la session n'existe pas
+     * @throws DejaPresentException    si l'étudiant est déjà présent (RG15)
+     */
+    public Presence enregistrerPresenceFormateur(Long sessionId, Long etudiantId) {
+        sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new SessionInconnueException(
+                        "Aucune session ne correspond à cet identifiant."));
+
+        presenceRepository.findBySessionIdAndEtudiantId(sessionId, etudiantId)
+                .ifPresent(p -> {
+                    throw new DejaPresentException(
+                            "Une présence existe déjà pour cet étudiant sur cette session.");
+                });
+
+        Presence presence = new Presence();
+        presence.setSessionId(sessionId);
+        presence.setEtudiantId(etudiantId);
+        presence.setSource("FORMATEUR");
+        presence.setMarqueAt(LocalDateTime.now());
+
+        return presenceRepository.save(presence);
     }
 
     /** Vérifie et retire les blocages expirés associés à l'étudiant. */
