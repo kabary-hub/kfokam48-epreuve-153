@@ -1,50 +1,64 @@
 package com.presencekf.backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entité Presence, mappée sur la table `presences` de la migration V1.
+ *
+ * Champs conformes à V1 :
+ * - id, sessionId, etudiantId, source, marqueAt
+ *
+ * Contrainte d'unicité : (sessionId, etudiantId) → RG15.
+ * Source : ETUDIANT (marquage par code) ou FORMATEUR (ajout manuel Q14).
+ */
 @Entity
-@Table(name = "presence")
+@Table(
+    name = "presences",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_presence_session_etudiant",
+        columnNames = {"session_id", "etudiant_id"}
+    )
+)
 public class Presence {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String etudiant;
+    @Column(name = "session_id", nullable = false)
+    private Long sessionId;
 
-    @Column(nullable = false)
-    private String code;
+    @Column(name = "etudiant_id", nullable = false)
+    private Long etudiantId;
 
-    @Column(nullable = false)
-    private LocalDateTime timestamp;
+    @Column(nullable = false, length = 20)
+    private String source;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
+    @Column(name = "marque_at", nullable = false)
+    private LocalDateTime marqueAt;
 
-    public Presence() {}
-
-    public Presence(String etudiant, String code) {
-        this.etudiant = etudiant;
-        this.code = code;
-        this.timestamp = LocalDateTime.now();
-    }
+    // Getters et setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getEtudiant() { return etudiant; }
-    public void setEtudiant(String etudiant) { this.etudiant = etudiant; }
+    public Long getSessionId() { return sessionId; }
+    public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
+    public Long getEtudiantId() { return etudiantId; }
+    public void setEtudiantId(Long etudiantId) { this.etudiantId = etudiantId; }
 
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
 
-    public Session getSession() { return session; }
-    public void setSession(Session session) { this.session = session; }
+    public LocalDateTime getMarqueAt() { return marqueAt; }
+    public void setMarqueAt(LocalDateTime marqueAt) { this.marqueAt = marqueAt; }
 }
