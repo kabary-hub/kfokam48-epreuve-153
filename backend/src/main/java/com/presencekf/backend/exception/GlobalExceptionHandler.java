@@ -84,6 +84,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Trop de tentatives erronées → 429 Too Many Requests (RG3).
+     */
+    @ExceptionHandler(TropTentativesException.class)
+    public ResponseEntity<Map<String, String>> handleTropTentatives(TropTentativesException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                "code", "TROP_TENTATIVES",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /**
      * Filet de sécurité — toute autre erreur non gérée → 500 ERREUR_INTERNE
      * Aucune stack trace n'est renvoyée au client (B4).
      */
