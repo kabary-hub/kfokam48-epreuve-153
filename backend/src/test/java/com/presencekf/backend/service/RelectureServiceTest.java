@@ -2,12 +2,15 @@ package com.presencekf.backend.service;
 
 import com.presencekf.backend.entity.Exercice;
 import com.presencekf.backend.entity.Relecture;
+import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.AutoRelectureException;
 import com.presencekf.backend.exception.NoteInvalideException;
 import com.presencekf.backend.exception.RelectureDejaRendueException;
+import com.presencekf.backend.exception.SessionClotureeException;
 import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.repository.ExerciceRepository;
 import com.presencekf.backend.repository.RelectureRepository;
+import com.presencekf.backend.repository.SessionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +34,9 @@ class RelectureServiceTest {
     @Mock
     private ExerciceRepository exerciceRepository;
 
+    @Mock
+    private SessionRepository sessionRepository;
+
     @InjectMocks
     private RelectureService relectureService;
 
@@ -38,6 +44,7 @@ class RelectureServiceTest {
         Exercice exercice = new Exercice();
         exercice.setId(id);
         exercice.setEtudiantId(auteur);
+        exercice.setSessionId(1L);
         exercice.setRelecteurId(relecteur);
         exercice.setStatut("EN_ATTENTE");
         return exercice;
@@ -55,6 +62,7 @@ class RelectureServiceTest {
     void relecteurNonAssigne_doitLancerAutoRelectureException() {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, null);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
 
         assertThatThrownBy(() -> relectureService.rendre(1L, 15, "Bien"))
                 .isInstanceOf(AutoRelectureException.class);
@@ -64,6 +72,7 @@ class RelectureServiceTest {
     void auteurEtRelecteurIdentiques_doitLancerAutoRelectureException() {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, 1L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
 
         assertThatThrownBy(() -> relectureService.rendre(1L, 15, "Bien"))
                 .isInstanceOf(AutoRelectureException.class);
@@ -73,6 +82,7 @@ class RelectureServiceTest {
     void noteHorsLimites_doitLancerNoteInvalideException() {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
 
         assertThatThrownBy(() -> relectureService.rendre(1L, 25, "Bien"))
                 .isInstanceOf(NoteInvalideException.class);
@@ -82,6 +92,7 @@ class RelectureServiceTest {
     void dejaRendue_doitLancerRelectureDejaRendueException() {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
         Relecture existing = new Relecture();
         existing.setStatut("RELUE");
         when(relectureRepository.findByExerciceId(1L)).thenReturn(Optional.of(existing));
@@ -91,9 +102,22 @@ class RelectureServiceTest {
     }
 
     @Test
+    void sessionCloturee_doitLancerSessionClotureeException() {
+        Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L);
+        when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
+        Session session = new Session();
+        session.setClotureAt(java.time.LocalDateTime.now());
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> relectureService.rendre(1L, 15, "Bien"))
+                .isInstanceOf(SessionClotureeException.class);
+    }
+
+    @Test
     void casNominal_creeRelectureEtMarqueExerciceRelu() {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
         when(relectureRepository.findByExerciceId(1L)).thenReturn(Optional.empty());
         when(relectureRepository.save(any(Relecture.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
