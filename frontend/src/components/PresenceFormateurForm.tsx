@@ -5,10 +5,7 @@ import {
 } from '../api/presencesApi';
 import { useAsync } from '../hooks/useAsync';
 
-/**
- * Formulaire d'ajout manuel de présence (M3, EF3, Q14).
- * La présence créée est marquée source = "FORMATEUR" (RG13).
- */
+/** Formulaire d'ajout manuel de présence (M3, EF3, Q14). */
 export function PresenceFormateurForm() {
   const [sessionId, setSessionId] = useState(1);
   const [etudiantId, setEtudiantId] = useState(1);
@@ -20,14 +17,14 @@ export function PresenceFormateurForm() {
   };
 
   return (
-    <section className="presence-formateur-form">
-      <h2>Ajouter une présence (formateur)</h2>
-      <p>
-        <em>La présence sera marquée « ajoutée par le formateur ».</em>
+    <section className="card">
+      <h2>Ajouter une présence</h2>
+      <p className="text-muted text-small">
+        Cette présence sera identifiée comme ajoutée par le formateur.
       </p>
 
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className="form-group">
           <label htmlFor="presence-formateur-session">Session</label>
           <input
             id="presence-formateur-session"
@@ -39,7 +36,7 @@ export function PresenceFormateurForm() {
           />
         </div>
 
-        <div>
+        <div className="form-group">
           <label htmlFor="presence-formateur-etudiant">Étudiant</label>
           <select
             id="presence-formateur-etudiant"
@@ -52,21 +49,21 @@ export function PresenceFormateurForm() {
           </select>
         </div>
 
-        <button type="submit" disabled={loading}>
+        <button type="submit" className="btn" disabled={loading}>
           {loading ? 'Envoi…' : 'Ajouter la présence'}
         </button>
       </form>
 
       {error && (
-        <div role="alert" className="error">
+        <div role="alert" className="alert alert-error">
           <strong>{error.code}</strong> : {error.message}
         </div>
       )}
 
       {data && (
-        <div role="status" className="success">
-          <p>Présence ajoutée (source : {data.source}).</p>
-          <p>
+        <div role="status" className="alert alert-success">
+          <p><strong>Présence ajoutée (source : {data.source}).</strong></p>
+          <p className="text-small text-muted">
             Session : {data.sessionId} — Étudiant : {data.etudiantId}
           </p>
         </div>

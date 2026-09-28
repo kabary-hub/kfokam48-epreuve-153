@@ -3,10 +3,12 @@ import { PresenceForm } from '../components/PresenceForm';
 
 export function EtudiantPage() {
   return (
-    <div className="page-etudiant">
-      <h1>Espace Étudiant</h1>
-      <PresenceForm />
-      <ExerciceForm />
+    <div>
+      <h1 className="page-title">Espace Étudiant</h1>
+      <div className="card-grid">
+        <PresenceForm />
+        <ExerciceForm />
+      </div>
     </div>
   );
 }

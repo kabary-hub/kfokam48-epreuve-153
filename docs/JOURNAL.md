@@ -76,6 +76,14 @@
 
 **IA :** Freebuff a aidé à refondre le mapping JPA et à implémenter la validation URI. Vérifications : liens sans schéma et schémas autres que HTTP(S) refusés ; session inconnue, dépôt dupliqué, réponse 201 et statut initial `EN_ATTENTE` couverts par les tests. `./mvnw clean test` passe (30 tests) et `npm run build` réussit.
 
+### M5 — Assigner un relecteur automatiquement (issue #19)
+
+**Fait :** `AssignationRelecteurService` choisit aléatoirement avec `SecureRandom` parmi les étudiants présents. L’auteur est exclu (RG4), ainsi que les étudiants ayant déjà un exercice à relire dans cette session (RG17, unicité implicite du rôle de relecteur). `ExerciceService.deposer()` effectue l’assignation lors du dépôt : avec candidat, `relecteurId` est renseigné et le statut vaut `EN_ATTENTE` ; sans candidat, `relecteurId = null` et le statut vaut `EN_ATTENTE_SANS_RELECTEUR` (Q7+Q12). Tests unitaires couvrant absence de présents, candidats tous occupés, un candidat, plusieurs candidats et exclusions ; les deux statuts sont couverts en intégration. La suite backend compte 37 tests. Frontend : feuille CSS responsive commune (layout, cartes, champs, boutons, alertes) et messages explicites pour les deux statuts dans le formulaire de dépôt.
+
+**Bloqué :** Aucun blocage majeur. Une assertion de test pour plusieurs candidats a nécessité une correction de compilation (`a9bbf31`), puis la suite complète a passé.
+
+**IA :** Freebuff a aidé à implémenter l’assignation, les tests et le style global. Vérifié que l’auteur et les candidats déjà occupés sont exclus, qu’un statut dédié est renvoyé en l’absence de candidat, et que les deux résultats sont présentés lisiblement côté frontend.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**

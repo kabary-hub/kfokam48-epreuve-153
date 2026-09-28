@@ -106,12 +106,13 @@ Justification :
 | RG14 | Après clôture de la session par le formateur, une relecture rendue est définitive et non modifiable | Q15 corrigée par Q10 |
 | RG15 | Un étudiant ne peut être présent qu'une seule fois par session (unicité) | implicite (déduit de Q2) |
 | RG16 | Un étudiant ne peut déposer qu'un seul exercice par session (unicité) | implicite (déduit de Q4) |
+| RG17 | Un étudiant ne peut être relecteur que d'un seul exercice par session | implicite (déduit de RG5 + Q6) |
 
 Décision Q10 > Q15 :
 Q10 indique qu'une relecture est modifiable tant que la session n'est pas clôturée. Q15 affirme qu'une note envoyée est définitive. Ces deux réponses se contredisent. Q10 l'emporte car : (1) Q11 décrit un usage concret du formateur qui implique un état intermédiaire avant clôture, (2) Q10 décrit un mécanisme conditionné et précis, (3) Q15 formule une intention générale (« c'est plus honnête ») sans mécanisme. Conséquence : seule la note est modifiable avant clôture ; le commentaire initial reste immuable.
 
-Unicité implicite (RG15, RG16) :
-Le client ne formule pas explicitement ces deux règles, mais elles découlent du modèle : une présence par étudiant et par session (sinon le tableau est faussé), et un exercice par étudiant et par session (sinon l'assignation d'un relecteur devient ambiguë). Ces règles sont documentées ici comme hypothèses raisonnables.
+Unicité implicite (RG15, RG16, RG17) :
+Le client ne formule pas explicitement ces règles, mais elles découlent du modèle : une présence par étudiant et par session (sinon le tableau est faussé), un exercice par étudiant et par session (sinon l'assignation d'un relecteur devient ambiguë), et un seul exercice à relire par étudiant et par session (conformément à RG5/Q6). Ces règles sont documentées ici comme hypothèses raisonnables.
 
 Clôture manuelle (RG11, RG14) :
 La clôture de session est une action manuelle du formateur (Q12). Aucune clôture automatique n'est prévue. Les relectures deviennent définitives après clôture (RG14) ; les dépôts sont refusés après clôture (RG11).
