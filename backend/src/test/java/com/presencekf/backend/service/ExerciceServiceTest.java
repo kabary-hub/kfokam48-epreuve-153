@@ -4,6 +4,7 @@ import com.presencekf.backend.entity.Exercice;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.ExerciceDejaDeposeException;
 import com.presencekf.backend.exception.LienInvalideException;
+import com.presencekf.backend.exception.SessionClotureeException;
 import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.repository.ExerciceRepository;
 import com.presencekf.backend.repository.SessionRepository;
@@ -52,6 +53,17 @@ class ExerciceServiceTest {
         assertThatThrownBy(() ->
                 exerciceService.deposer(99L, 1L, "https://exemple.com/exo"))
                 .isInstanceOf(SessionInconnueException.class);
+    }
+
+    @Test
+    void sessionCloturee_doitLancerSessionClotureeException() {
+        Session session = sessionOuverte(1L);
+        session.setClotureAt(LocalDateTime.now());
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() ->
+                exerciceService.deposer(1L, 1L, "https://exemple.com/exo"))
+                .isInstanceOf(SessionClotureeException.class);
     }
 
     @Test

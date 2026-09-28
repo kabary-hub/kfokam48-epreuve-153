@@ -1,6 +1,8 @@
 package com.presencekf.backend.service;
 
 import com.presencekf.backend.entity.Session;
+import com.presencekf.backend.exception.SessionDejaClotureeException;
+import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.repository.SessionRepository;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +55,31 @@ public class SessionService {
         session.setOuvertureAt(now);
         session.setExpirationAt(now.plusMinutes(CODE_VALIDITY_MINUTES));
 
+        return sessionRepository.save(session);
+    }
+
+    /**
+     * Clôture une session (M8, EF11).
+     *
+     * Après clôture, aucun dépôt d'exercice ni modification de relecture
+     * n'est possible (RG11, RG14, Q12).
+     *
+     * @param sessionId l'identifiant de la session
+     * @return la Session clôturée
+     * @throws SessionInconnueException si la session n'existe pas
+     * @throws SessionDejaClotureeException si la session est déjà clôturée
+     */
+    public Session cloturer(Long sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new SessionInconnueException(
+                        "Aucune session ne correspond à cet identifiant."));
+
+        if (session.getClotureAt() != null) {
+            throw new SessionDejaClotureeException(
+                    "Cette session est déjà clôturée.");
+        }
+
+        session.setClotureAt(LocalDateTime.now());
         return sessionRepository.save(session);
     }
 

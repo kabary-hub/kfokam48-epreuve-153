@@ -4,6 +4,7 @@ import com.presencekf.backend.entity.Exercice;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.ExerciceDejaDeposeException;
 import com.presencekf.backend.exception.LienInvalideException;
+import com.presencekf.backend.exception.SessionClotureeException;
 import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.repository.ExerciceRepository;
 import com.presencekf.backend.repository.SessionRepository;
@@ -56,7 +57,7 @@ public class ExerciceService {
                         "Aucune session ne correspond à cet identifiant."));
 
         if (session.getClotureAt() != null) {
-            throw new ExerciceDejaDeposeException(
+            throw new SessionClotureeException(
                     "La session est clôturée, aucun dépôt n'est possible.");
         }
 

@@ -100,6 +100,14 @@
 
 **IA :** Freebuff a aidé à réaliser l’agrégation, les tests et l’affichage. Vérifié que le tableau ne contient que les étudiants de la promotion, que l’erreur promotion inconnue renvoie 404 `PROMOTION_INCONNUE`, et que le frontend consomme la moyenne de l’API sans recalculer (F3). `./mvnw clean test` et `npm run build` ont été exécutés.
 
+### M8 — Clôturer une session manuellement (issue #41)
+
+**Fait :** `SessionDetailDto`, `SessionDejaClotureeException` (409) et `SessionService.cloturer()` ajoutés. `POST /api/sessions/{id}/cloture` renvoie 200 avec les détails de la session; les erreurs sont 404 `SESSION_INCONNUE` et 409 `SESSION_DEJA_CLOTUREE`. Après clôture, le dépôt est refusé avec le code dédié `SESSION_CLOTUREE` (409), distinct de `EXERCICE_DEJA_DEPOSE`, et `RelectureService` refuse les nouvelles relectures/modifications (RG11, RG14). Trois tests d’intégration dédiés couvrent l’endpoint de clôture; les tests unitaires et MVC couvrent service, erreurs et réponse. La suite backend compte 66 tests et passe. Frontend : `cloturerSession` et `SessionClotureForm` ajoutés à `/formateur`, avec confirmation avant action et affichage des états succès/erreur; `npm run build` passe.
+
+**Bloqué :** Aucun blocage. L’audit a relevé que `EXERCICE_DEJA_DEPOSE` était sémantiquement incorrect pour un dépôt après clôture; une exception et un code spécifiques `SESSION_CLOTUREE` ont été ajoutés et testés.
+
+**IA :** Freebuff a aidé à réaliser le service, l’endpoint, les protections métier, les tests et le formulaire. Vérifié la clôture manuelle (Q12), les réponses HTTP 200/404/409, le refus de dépôt et de relecture après clôture, ainsi que l’absence de régression avec `./mvnw clean test` (66 tests) et `npm run build`.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**

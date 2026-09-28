@@ -1,11 +1,13 @@
 package com.presencekf.backend.controller;
 
 import com.presencekf.backend.dto.SessionCreateDto;
+import com.presencekf.backend.dto.SessionDetailDto;
 import com.presencekf.backend.dto.SessionResponseDto;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.service.SessionService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +42,19 @@ public class SessionController {
                 session.getCode(),
                 session.getOuvertureAt(),
                 session.getExpirationAt()
+        );
+    }
+
+    @PostMapping("/{id}/cloture")
+    public SessionDetailDto cloturer(@PathVariable Long id) {
+        Session session = sessionService.cloturer(id);
+        return new SessionDetailDto(
+                session.getId(),
+                session.getTitre(),
+                session.getCode(),
+                session.getOuvertureAt(),
+                session.getExpirationAt(),
+                session.getClotureAt()
         );
     }
 }

@@ -1,6 +1,8 @@
 package com.presencekf.backend.service;
 
 import com.presencekf.backend.entity.Session;
+import com.presencekf.backend.exception.SessionDejaClotureeException;
+import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.repository.SessionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -71,6 +75,38 @@ class SessionServiceTest {
         assertThat(session.getCode())
                 .as("Le code doit respecter le pattern ^[A-Z0-9]{6}$")
                 .matches("^[A-Z0-9]{6}$");
+    }
+
+    @Test
+    void cloturer_sessionInconnue_doitLancerSessionInconnueException() {
+        when(sessionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> sessionService.cloturer(99L))
+                .isInstanceOf(SessionInconnueException.class);
+    }
+
+    @Test
+    void cloturer_dejaCloturee_doitLancerSessionDejaClotureeException() {
+        Session session = new Session();
+        session.setId(1L);
+        session.setClotureAt(java.time.LocalDateTime.now());
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> sessionService.cloturer(1L))
+                .isInstanceOf(SessionDejaClotureeException.class);
+    }
+
+    @Test
+    void cloturer_sessionOuverte_doitRemplirClotureAt() {
+        Session session = new Session();
+        session.setId(1L);
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(sessionRepository.save(any(Session.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Session result = sessionService.cloturer(1L);
+
+        assertThat(result.getClotureAt()).isNotNull();
     }
 
     @Test

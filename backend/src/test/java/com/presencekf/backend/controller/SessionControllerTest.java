@@ -2,6 +2,8 @@ package com.presencekf.backend.controller;
 
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.GlobalExceptionHandler;
+import com.presencekf.backend.exception.SessionDejaClotureeException;
+import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.service.SessionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +69,49 @@ class SessionControllerTest {
                 .andExpect(jsonPath("$.code").value(org.hamcrest.Matchers.matchesPattern("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.ouvertureAt").exists())
                 .andExpect(jsonPath("$.expirationAt").exists());
+    }
+
+    @Test
+    void cloturer_doitRetourner200AvecDetailsSession() throws Exception {
+        LocalDateTime ouvertureAt = LocalDateTime.of(2026, 9, 27, 12, 0);
+        LocalDateTime clotureAt = ouvertureAt.plusHours(2);
+        Session session = new Session();
+        session.setId(1L);
+        session.setTitre("Cours de test intégration");
+        session.setCode("A1B2C3");
+        session.setOuvertureAt(ouvertureAt);
+        session.setExpirationAt(ouvertureAt.plusMinutes(15));
+        session.setClotureAt(clotureAt);
+        when(sessionService.cloturer(eq(1L))).thenReturn(session);
+
+        mockMvc.perform(post("/api/sessions/1/cloture"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.titre").value("Cours de test intégration"))
+                .andExpect(jsonPath("$.code").value("A1B2C3"))
+                .andExpect(jsonPath("$.ouvertureAt").exists())
+                .andExpect(jsonPath("$.expirationAt").exists())
+                .andExpect(jsonPath("$.clotureAt").exists());
+    }
+
+    @Test
+    void cloturer_sessionInconnue_doitRetourner404() throws Exception {
+        when(sessionService.cloturer(eq(99L)))
+                .thenThrow(new SessionInconnueException("Session inconnue."));
+
+        mockMvc.perform(post("/api/sessions/99/cloture"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SESSION_INCONNUE"));
+    }
+
+    @Test
+    void cloturer_dejaCloturee_doitRetourner409() throws Exception {
+        when(sessionService.cloturer(eq(1L)))
+                .thenThrow(new SessionDejaClotureeException("Cette session est déjà clôturée."));
+
+        mockMvc.perform(post("/api/sessions/1/cloture"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SESSION_DEJA_CLOTUREE"));
     }
 
     @Test

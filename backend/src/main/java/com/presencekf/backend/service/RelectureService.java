@@ -2,12 +2,15 @@ package com.presencekf.backend.service;
 
 import com.presencekf.backend.entity.Exercice;
 import com.presencekf.backend.entity.Relecture;
+import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.AutoRelectureException;
 import com.presencekf.backend.exception.NoteInvalideException;
 import com.presencekf.backend.exception.RelectureDejaRendueException;
+import com.presencekf.backend.exception.SessionClotureeException;
 import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.repository.ExerciceRepository;
 import com.presencekf.backend.repository.RelectureRepository;
+import com.presencekf.backend.repository.SessionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +29,14 @@ public class RelectureService {
 
     private final RelectureRepository relectureRepository;
     private final ExerciceRepository exerciceRepository;
+    private final SessionRepository sessionRepository;
 
     public RelectureService(RelectureRepository relectureRepository,
-                            ExerciceRepository exerciceRepository) {
+                            ExerciceRepository exerciceRepository,
+                            SessionRepository sessionRepository) {
         this.relectureRepository = relectureRepository;
         this.exerciceRepository = exerciceRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     /**
@@ -47,6 +53,15 @@ public class RelectureService {
                 .orElseThrow(() -> new SessionInconnueException(
                         "Aucun exercice ne correspond à cet identifiant."));
 
+        // Vérifier que la session n'est pas clôturée (M8, RG14)
+        Session session = sessionRepository.findById(exercice.getSessionId())
+                .orElseThrow(() -> new SessionInconnueException(
+                        "Session de l'exercice introuvable."));
+        if (session.getClotureAt() != null) {
+            throw new SessionClotureeException(
+                    "La session est clôturée, aucune relecture n'est possible.");
+        }
+
         if (exercice.getRelecteurId() == null) {
             throw new AutoRelectureException(
                     "Aucun relecteur n'est assigné à cet exercice.");
@@ -60,7 +75,7 @@ public class RelectureService {
         Relecture relecture = relectureRepository.findByExerciceId(exerciceId)
                 .orElse(null);
         if (relecture != null && "RELUE".equals(relecture.getStatut())) {
-            // La modification avant clôture sera traitée en M7 (Q10 > Q15).
+            // Une relecture rendue est définitive (M8, RG14).
             throw new RelectureDejaRendueException(
                     "Une relecture a déjà été rendue pour cet exercice.");
         }
