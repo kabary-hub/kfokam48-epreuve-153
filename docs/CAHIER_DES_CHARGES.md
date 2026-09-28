@@ -55,7 +55,7 @@ Ce découpage garde les 5 opérations imposées par le contrat d'API et leurs ex
 | EF1 | L'étudiant marque sa présence avec un code | Quand je saisis un code valide et non expiré, ma présence apparaît dans le tableau du formateur | Must |
 | EF2 | Le formateur ouvre une session et obtient un code | Quand je crée une session avec {titre, promotionId}, je reçois 201 {id, code, ouvertureAt, expirationAt} avec expirationAt = ouvertureAt + 15 min | Must |
 | EF3 | Le formateur peut ajouter une présence manuellement | Quand j'ajoute une présence pour un étudiant de la promotion, elle est enregistrée avec source = FORMATEUR et visible dans le tableau | Must |
-| EF4 | L'étudiant dépose le lien de son exercice | Quand je dépose un URI valide, l'exercice est créé avec statut = EN_ATTENTE (relecteur trouvé) ou EN_ATTENTE_SANS_RELECTEUR (aucun candidat disponible). DEPOSE est un état transitoire interne non renvoyé au client. | Must |
+| EF4 | L'étudiant dépose le lien de son exercice | Quand je dépose un URI valide avant la clôture, l'exercice est créé avec statut = EN_ATTENTE (relecteur trouvé) ou EN_ATTENTE_SANS_RELECTEUR (aucun candidat disponible). DEPOSE est un état transitoire interne non renvoyé au client. Après clôture, le dépôt est refusé avec 409 SESSION_CLOTUREE ; un doublon avant clôture renvoie 409 EXERCICE_DEJA_DEPOSE. | Must |
 | EF5 | L'étudiant peut remplacer le lien de son exercice | Quand je remplace le lien avant toute relecture commencée, le nouveau lien est pris en compte | Should |
 | EF6 | Le système assigne un relecteur à chaque exercice déposé | Quand un exercice est déposé, un relecteur est choisi au hasard parmi les étudiants présents hors auteur ; si aucun candidat, relecteurId = null et statut = EN_ATTENTE_SANS_RELECTEUR | Must |
 | EF7 | Le relecteur rend une note et un commentaire | Quand je soumets une note entière entre 0 et 20, la relecture passe au statut RELUE et l'étudiant relu peut voir la note | Must |
@@ -100,10 +100,10 @@ Justification :
 | RG8 | La note est un entier compris entre 0 et 20 inclus | Q9 |
 | RG9 | Une relecture rendue est modifiable tant que la session n'est pas clôturée (Q10 l'emporte sur Q15) ; seul le commentaire initial reste immuable | Q10 > Q15 |
 | RG10 | Un exercice sans relecture rendue reste au statut EN_ATTENTE et apparaît comme tel dans le tableau | Q11 |
-| RG11 | Un exercice peut être déposé jusqu'à la clôture manuelle de la session par le formateur | Q12 |
+| RG11 | Un exercice peut être déposé jusqu'à la clôture manuelle de la session par le formateur ; après clôture, le dépôt est refusé avec 409 SESSION_CLOTUREE, distinct de EXERCICE_DEJA_DEPOSE qui désigne un doublon | Q12 |
 | RG12 | Le lien d'un exercice est remplaçable tant qu'aucune relecture n'a été rendue (statut EN_ATTENTE) | Q13 |
 | RG13 | Une présence ajoutée manuellement par le formateur porte source = FORMATEUR et est distinguable dans le tableau | Q14 |
-| RG14 | Après clôture de la session par le formateur, une relecture rendue est définitive et non modifiable | Q15 corrigée par Q10 |
+| RG14 | Après clôture de la session par le formateur, une relecture rendue est définitive et non modifiable ; toute tentative de rendre ou modifier une relecture sur une session clôturée est refusée | Q15 corrigée par Q10 |
 | RG15 | Un étudiant ne peut être présent qu'une seule fois par session (unicité) | implicite (déduit de Q2) |
 | RG16 | Un étudiant ne peut déposer qu'un seul exercice par session (unicité) | implicite (déduit de Q4) |
 | RG17 | Un étudiant ne peut être relecteur que d'un seul exercice par session | implicite (déduit de RG5 + Q6) |
@@ -115,7 +115,7 @@ Unicité implicite (RG15, RG16, RG17) :
 Le client ne formule pas explicitement ces règles, mais elles découlent du modèle : une présence par étudiant et par session (sinon le tableau est faussé), un exercice par étudiant et par session (sinon l'assignation d'un relecteur devient ambiguë), et un seul exercice à relire par étudiant et par session (conformément à RG5/Q6). Ces règles sont documentées ici comme hypothèses raisonnables.
 
 Clôture manuelle (RG11, RG14) :
-La clôture de session est une action manuelle du formateur (Q12). Aucune clôture automatique n'est prévue. Les relectures deviennent définitives après clôture (RG14) ; les dépôts sont refusés après clôture (RG11).
+La clôture de session est une action manuelle du formateur (Q12). Aucune clôture automatique n'est prévue. Les relectures deviennent définitives après clôture (RG14) ; les dépôts sont refusés après clôture (RG11) avec HTTP 409 `SESSION_CLOTUREE`. Ce code est distinct de `EXERCICE_DEJA_DEPOSE`, réservé au cas où l'étudiant a déjà déposé un exercice dans une session encore ouverte. Une seconde tentative de clôture renvoie HTTP 409 `SESSION_DEJA_CLOTUREE`.
 
 ## 7. Zones d'ombre, hypothèses et contradictions
 
