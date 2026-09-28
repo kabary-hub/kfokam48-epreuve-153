@@ -1,6 +1,7 @@
 package com.presencekf.backend.controller;
 
 import com.presencekf.backend.dto.PresenceCreateDto;
+import com.presencekf.backend.dto.PresenceFormateurCreateDto;
 import com.presencekf.backend.dto.PresenceResponseDto;
 import com.presencekf.backend.entity.Presence;
 import com.presencekf.backend.service.PresenceService;
@@ -29,6 +30,20 @@ public class PresenceController {
 
     public PresenceController(PresenceService presenceService) {
         this.presenceService = presenceService;
+    }
+
+    @PostMapping("/formateur")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PresenceResponseDto ajouterParFormateur(
+            @Valid @RequestBody PresenceFormateurCreateDto dto) {
+        Presence presence = presenceService.enregistrerPresenceFormateur(
+                dto.getSessionId(), dto.getEtudiantId());
+        return new PresenceResponseDto(
+                presence.getId(),
+                presence.getSessionId(),
+                presence.getEtudiantId(),
+                presence.getSource()
+        );
     }
 
     @PostMapping
