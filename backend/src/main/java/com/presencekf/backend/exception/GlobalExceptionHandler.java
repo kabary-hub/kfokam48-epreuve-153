@@ -106,6 +106,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Lien d'exercice invalide → 400 LIEN_INVALIDE (M4).
+     */
+    @ExceptionHandler(LienInvalideException.class)
+    public ResponseEntity<Map<String, String>> handleLienInvalide(LienInvalideException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "code", "LIEN_INVALIDE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /**
+     * Exercice déjà déposé → 409 EXERCICE_DEJA_DEPOSE (M4, RG16).
+     */
+    @ExceptionHandler(ExerciceDejaDeposeException.class)
+    public ResponseEntity<Map<String, String>> handleExerciceDejaDepose(ExerciceDejaDeposeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "code", "EXERCICE_DEJA_DEPOSE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /**
      * Filet de sécurité — toute autre erreur non gérée → 500 ERREUR_INTERNE
      * Aucune stack trace n'est renvoyée au client (B4).
      */
