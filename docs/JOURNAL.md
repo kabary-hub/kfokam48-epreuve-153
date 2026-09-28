@@ -52,6 +52,14 @@
 
 **IA :** Freebuff a présenté les options de dépendance Flyway; j’ai retenu Flyway 9 avec `flyway-core` seul après l’échec Maven sur les modules PostgreSQL sans version, puis validé le choix par `./mvnw test` (7 tests) et `./mvnw clean compile`. La détection Surefire a été vérifiée en lançant la suite complète après renommage. Les changements ont été contrôlés par rapport au contrat API et au CDC.
 
+### M2 — Marquer la présence (issue #16)
+
+**Fait :** Entités `Etudiant` et `Presence` mappées sur V1, DTO d’entrée et de sortie conformes au contrat, repository avec recherche par session/étudiant (RG15), service et endpoint `POST /api/presences` → 201. RG1/RG2 (expiration), RG15 (unicité) et RG3 (5 codes inconnus → blocage de 2 minutes) sont implémentés ; le compteur RG3 est en mémoire et s’applique à l’étudiant, car le contrat n’identifie pas la session quand le code est inconnu. Le gestionnaire d’erreurs renvoie 429 `{code, message}` pour `TROP_TENTATIVES`. Tests ajoutés : 5 unitaires et 3 d’intégration pour M2 ; la suite complète compte 15 tests et passe. Frontend : couche API dédiée, formulaire de présence avec états de chargement/erreur et routes React Router `/formateur`, `/etudiant`, `/relecteur`. `/relecteur` est un écran placeholder ; la relecture n’est pas implémentée dans M2. `npm run build` passe.
+
+**Bloqué :** Le premier test d’intégration nominal échouait (500) car les méthodes partageaient le code de session `CODE01`, provoquant plusieurs résultats pour la recherche par code. Résolu en supprimant présences et sessions avant chaque test. La règle RG3 est approchée au niveau étudiant pour les codes inconnus : le corps `{code, etudiantId}` ne permet pas d’identifier la session visée si le code est invalide. Les compteurs sont volatils et sont réinitialisés au redémarrage de l’application.
+
+**IA :** Freebuff a aidé à implémenter le flux API, le formulaire et le blocage RG3. Les règles ont été vérifiées avec les tests unitaires et d’intégration, notamment le scénario de cinq erreurs puis une réponse 429, ainsi que la suite complète `./mvnw test` (15 tests). Le build frontend a été vérifié par `npm run build`.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**
