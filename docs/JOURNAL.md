@@ -92,6 +92,14 @@
 
 **IA :** Freebuff a aidé à implémenter le parcours et les tests. Vérifié que l’identifiant de route désigne l’exercice, que le succès est HTTP 200 et que les erreurs de note, auto-relecture et double rendu utilisent les statuts/codes contractuels. `./mvnw clean test` et `npm run build` ont été exécutés.
 
+### M7 — Consulter le tableau (issue #22)
+
+**Fait :** Entité `Promotion` et `PromotionRepository` mappés sur V1, `TableauDto` conforme au contrat et `PromotionInconnueException` mappée en 404 `PROMOTION_INCONNUE`. Repositories étendus pour compter présences et exercices par étudiant, compter les relectures à faire et charger les notes associées aux exercices. `TableauService` agrège une ligne par étudiant : présences, dépôts, moyenne des notes reçues (calculée côté API conformément à F3, `null` en l’absence de notes), et relectures en attente. `GET /api/tableau?promotionId=X` renvoie 200. Quatre tests unitaires et trois tests d’intégration couvrent l’agrégation, la moyenne nulle, la promotion inconnue et le paramètre manquant ; la suite compte 54 tests. Frontend : API `tableauApi` et tableau responsive à cinq colonnes intégré à `/formateur`; la moyenne fournie par l’API est seulement formatée à deux décimales, jamais recalculée.
+
+**Bloqué :** Aucun blocage majeur. En intégration, Jackson sérialise la moyenne nulle comme `moyenne: null`; le test vérifie explicitement cette représentation.
+
+**IA :** Freebuff a aidé à réaliser l’agrégation, les tests et l’affichage. Vérifié que le tableau ne contient que les étudiants de la promotion, que l’erreur promotion inconnue renvoie 404 `PROMOTION_INCONNUE`, et que le frontend consomme la moyenne de l’API sans recalculer (F3). `./mvnw clean test` et `npm run build` ont été exécutés.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**
