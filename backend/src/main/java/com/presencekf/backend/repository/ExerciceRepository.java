@@ -22,6 +22,11 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
     Optional<Exercice> findBySessionIdAndEtudiantId(Long sessionId, Long etudiantId);
 
     /**
+     * Vérifie si un étudiant a déjà un exercice à relire dans une session.
+     */
+    boolean existsByRelecteurIdAndSessionId(Long relecteurId, Long sessionId);
+
+    /**
      * Liste les exercices d'une session (utilisé par M5 pour assigner un
      * relecteur, et par M7 pour le tableau).
      */
