@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom';
 import { PresenceFormateurForm } from './components/PresenceFormateurForm';
 import { SessionForm } from './components/SessionForm';
+import { TableauFormateur } from './components/TableauFormateur';
 import { EtudiantPage } from './pages/EtudiantPage';
 import { RelecteurPage } from './pages/RelecteurPage';
 
@@ -11,6 +12,9 @@ function FormateurPage() {
       <div className="card-grid">
         <SessionForm />
         <PresenceFormateurForm />
+      </div>
+      <div className="tableau-section">
+        <TableauFormateur />
       </div>
     </div>
   );
