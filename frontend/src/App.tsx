@@ -1,15 +1,41 @@
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom';
 import { SessionForm } from './components/SessionForm';
+import { EtudiantPage } from './pages/EtudiantPage';
+import { RelecteurPage } from './pages/RelecteurPage';
 
 function App() {
   return (
-    <div className="app">
-      <header>
-        <h1>PresenceKF — Épreuve KFOKAM48</h1>
-      </header>
-      <main>
-        <SessionForm />
-      </main>
-    </div>
+    <BrowserRouter>
+      <div className="app">
+        <header>
+          <h1>PresenceKF — Épreuve KFOKAM48</h1>
+          <nav aria-label="Navigation principale">
+            <Link to="/formateur">Formateur</Link>
+            {' | '}
+            <Link to="/etudiant">Étudiant</Link>
+            {' | '}
+            <Link to="/relecteur">Relecteur</Link>
+          </nav>
+        </header>
+        <main>
+          <Routes>
+            <Route path="/" element={<Navigate to="/etudiant" replace />} />
+            <Route
+              path="/formateur"
+              element={
+                <div className="page-formateur">
+                  <h1>Espace Formateur</h1>
+                  <SessionForm />
+                </div>
+              }
+            />
+            <Route path="/etudiant" element={<EtudiantPage />} />
+            <Route path="/relecteur" element={<RelecteurPage />} />
+            <Route path="*" element={<Navigate to="/etudiant" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
 
