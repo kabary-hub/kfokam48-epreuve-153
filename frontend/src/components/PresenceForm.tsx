@@ -2,10 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { marquerPresence, type PresenceResponseDto } from '../api/presencesApi';
 import { useAsync } from '../hooks/useAsync';
 
-/**
- * Formulaire de marquage de présence (M2, EF1).
- * L'identité de l'étudiant est choisie dans la liste de démonstration (Q1).
- */
+/** Formulaire de marquage de présence (M2, EF1). */
 export function PresenceForm() {
   const [code, setCode] = useState('');
   const [etudiantId, setEtudiantId] = useState(1);
@@ -17,10 +14,10 @@ export function PresenceForm() {
   };
 
   return (
-    <section className="presence-form">
+    <section className="card">
       <h2>Marquer ma présence</h2>
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className="form-group">
           <label htmlFor="presence-code">Code de présence</label>
           <input
             id="presence-code"
@@ -34,9 +31,10 @@ export function PresenceForm() {
             placeholder="ABC123"
             autoComplete="off"
           />
+          <p className="form-help">6 caractères (majuscules et chiffres)</p>
         </div>
 
-        <div>
+        <div className="form-group">
           <label htmlFor="presence-etudiant">Étudiant</label>
           <select
             id="presence-etudiant"
@@ -49,22 +47,23 @@ export function PresenceForm() {
           </select>
         </div>
 
-        <button type="submit" disabled={loading}>
+        <button type="submit" className="btn" disabled={loading}>
           {loading ? 'Envoi…' : 'Marquer ma présence'}
         </button>
       </form>
 
       {error && (
-        <div role="alert" className="error">
+        <div role="alert" className="alert alert-error">
           <strong>{error.code}</strong> : {error.message}
         </div>
       )}
 
       {data && (
-        <div role="status" className="success">
-          <p>Présence enregistrée.</p>
-          <p>Session : {data.sessionId}</p>
-          <p>Source : {data.source}</p>
+        <div role="status" className="alert alert-success">
+          <p><strong>Présence enregistrée.</strong></p>
+          <p className="text-small text-muted">
+            Session : {data.sessionId} — Source : {data.source}
+          </p>
         </div>
       )}
     </section>

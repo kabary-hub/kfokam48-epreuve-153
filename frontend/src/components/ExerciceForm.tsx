@@ -18,10 +18,10 @@ export function ExerciceForm() {
   };
 
   return (
-    <section className="exercice-form">
+    <section className="card">
       <h2>Déposer mon exercice</h2>
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className="form-group">
           <label htmlFor="exercice-session-id">Session</label>
           <input
             id="exercice-session-id"
@@ -33,7 +33,7 @@ export function ExerciceForm() {
           />
         </div>
 
-        <div>
+        <div className="form-group">
           <label htmlFor="exercice-etudiant-id">Étudiant</label>
           <select
             id="exercice-etudiant-id"
@@ -46,7 +46,7 @@ export function ExerciceForm() {
           </select>
         </div>
 
-        <div>
+        <div className="form-group">
           <label htmlFor="exercice-lien">Lien de l'exercice (URL)</label>
           <input
             id="exercice-lien"
@@ -59,20 +59,32 @@ export function ExerciceForm() {
           />
         </div>
 
-        <button type="submit" disabled={loading}>
+        <button type="submit" className="btn" disabled={loading}>
           {loading ? 'Dépôt…' : 'Déposer'}
         </button>
       </form>
 
       {error && (
-        <div role="alert" className="error">
+        <div role="alert" className="alert alert-error">
           <strong>{error.code}</strong> : {error.message}
         </div>
       )}
 
       {data && (
-        <div role="status" className="success">
-          <p>Exercice déposé (statut : {data.statut}).</p>
+        <div role="status" className="alert alert-success">
+          <p><strong>Exercice déposé.</strong></p>
+          {data.statut === 'EN_ATTENTE' && (
+            <p className="text-small">Un relecteur a été assigné automatiquement.</p>
+          )}
+          {data.statut === 'EN_ATTENTE_SANS_RELECTEUR' && (
+            <p className="text-small">
+              Aucun relecteur disponible pour le moment. Le formateur verra cet
+              exercice dans son tableau.
+            </p>
+          )}
+          {data.statut !== 'EN_ATTENTE' && data.statut !== 'EN_ATTENTE_SANS_RELECTEUR' && (
+            <p className="text-small">Statut : {data.statut}</p>
+          )}
         </div>
       )}
     </section>

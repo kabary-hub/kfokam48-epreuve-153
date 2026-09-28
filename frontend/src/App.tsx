@@ -4,33 +4,34 @@ import { SessionForm } from './components/SessionForm';
 import { EtudiantPage } from './pages/EtudiantPage';
 import { RelecteurPage } from './pages/RelecteurPage';
 
+function FormateurPage() {
+  return (
+    <div>
+      <h1 className="page-title">Espace Formateur</h1>
+      <div className="card-grid">
+        <SessionForm />
+        <PresenceFormateurForm />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <div className="app">
-        <header>
+        <header className="app-header">
           <h1>PresenceKF — Épreuve KFOKAM48</h1>
-          <nav aria-label="Navigation principale">
+          <nav className="app-nav" aria-label="Navigation principale">
             <Link to="/formateur">Formateur</Link>
-            {' | '}
             <Link to="/etudiant">Étudiant</Link>
-            {' | '}
             <Link to="/relecteur">Relecteur</Link>
           </nav>
         </header>
-        <main>
+        <main className="app-main">
           <Routes>
             <Route path="/" element={<Navigate to="/etudiant" replace />} />
-            <Route
-              path="/formateur"
-              element={
-                <div className="page-formateur">
-                  <h1>Espace Formateur</h1>
-                  <SessionForm />
-                  <PresenceFormateurForm />
-                </div>
-              }
-            />
+            <Route path="/formateur" element={<FormateurPage />} />
             <Route path="/etudiant" element={<EtudiantPage />} />
             <Route path="/relecteur" element={<RelecteurPage />} />
             <Route path="*" element={<Navigate to="/etudiant" replace />} />

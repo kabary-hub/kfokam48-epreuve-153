@@ -1,8 +1,12 @@
 export function RelecteurPage() {
   return (
-    <div className="page-relecteur">
-      <h1>Espace Relecteur</h1>
-      <p>Le parcours de relecture sera disponible dans une étape ultérieure.</p>
+    <div>
+      <h1 className="page-title">Espace Relecteur</h1>
+      <section className="card">
+        <p className="text-muted">
+          Le parcours de relecture sera implémenté dans M6.
+        </p>
+      </section>
     </div>
   );
 }
