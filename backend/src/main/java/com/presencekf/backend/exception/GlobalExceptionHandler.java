@@ -76,12 +76,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Session inexistante pour l'ajout manuel → 404 SESSION_INCONNUE (M3).
+     * Session inexistante → 404 SESSION_INCONNUE (M3, M8).
      */
     @ExceptionHandler(SessionInconnueException.class)
     public ResponseEntity<Map<String, String>> handleSessionInconnue(SessionInconnueException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "code", "SESSION_INCONNUE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /** Session déjà clôturée → 409 SESSION_DEJA_CLOTUREE (M8, EF11). */
+    @ExceptionHandler(SessionDejaClotureeException.class)
+    public ResponseEntity<Map<String, String>> handleSessionDejaCloturee(SessionDejaClotureeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "code", "SESSION_DEJA_CLOTUREE",
                 "message", ex.getMessage()
         ));
     }
