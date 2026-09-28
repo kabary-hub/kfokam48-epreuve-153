@@ -1,7 +1,9 @@
 package com.presencekf.backend.controller;
 
+import com.presencekf.backend.entity.Presence;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.repository.ExerciceRepository;
+import com.presencekf.backend.repository.PresenceRepository;
 import com.presencekf.backend.repository.SessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,9 @@ class ExerciceControllerSpringBootTest {
     private SessionRepository sessionRepository;
 
     @Autowired
+    private PresenceRepository presenceRepository;
+
+    @Autowired
     private ExerciceRepository exerciceRepository;
 
     private Long sessionId;
@@ -37,6 +42,7 @@ class ExerciceControllerSpringBootTest {
     @BeforeEach
     void setUp() {
         exerciceRepository.deleteAll();
+        presenceRepository.deleteAll();
         sessionRepository.deleteAll();
 
         Session session = new Session();
@@ -47,6 +53,18 @@ class ExerciceControllerSpringBootTest {
         session.setPromotionId(1L);
         sessionRepository.save(session);
         sessionId = session.getId();
+
+        marquerPresent(1L);
+        marquerPresent(2L);
+    }
+
+    private void marquerPresent(Long etudiantId) {
+        Presence presence = new Presence();
+        presence.setSessionId(sessionId);
+        presence.setEtudiantId(etudiantId);
+        presence.setSource("FORMATEUR");
+        presence.setMarqueAt(LocalDateTime.now());
+        presenceRepository.save(presence);
     }
 
     @Test
