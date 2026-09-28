@@ -91,6 +91,7 @@ class AssignationRelecteurServiceTest {
 
         Optional<Long> relecteur = assignationRelecteurService.choisirRelecteur(10L, 1L);
 
-        assertThat(relecteur).containsAnyOf(2L, 3L, 4L);
+        assertThat(relecteur).isPresent();
+        assertThat(relecteur.orElseThrow()).isIn(2L, 3L, 4L);
     }
 }
