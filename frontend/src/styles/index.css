@@ -140,7 +140,8 @@ select {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   min-height: 2.65rem;
   padding: 0.55rem 0.75rem;
@@ -152,8 +153,14 @@ select {
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
+.form-group textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
 }

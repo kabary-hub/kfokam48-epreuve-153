@@ -22,8 +22,11 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(e -> e.getField() + " : " + e.getDefaultMessage())
                 .orElse("Requête invalide");
+        boolean invalidReviewNote = ex.getBindingResult().getFieldErrors().stream()
+                .anyMatch(error -> "note".equals(error.getField()));
+        String code = invalidReviewNote ? "NOTE_INVALIDE" : "VALIDATION_ERROR";
         return ResponseEntity.badRequest().body(Map.of(
-                "code", "VALIDATION_ERROR",
+                "code", code,
                 "message", message
         ));
     }
@@ -123,6 +126,34 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleExerciceDejaDepose(ExerciceDejaDeposeException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "code", "EXERCICE_DEJA_DEPOSE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /** Note invalide → 400 NOTE_INVALIDE (M6, RG8). */
+    @ExceptionHandler(NoteInvalideException.class)
+    public ResponseEntity<Map<String, String>> handleNoteInvalide(NoteInvalideException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "code", "NOTE_INVALIDE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /** Auto-relecture interdite → 403 AUTO_RELECTURE (M6, RG4). */
+    @ExceptionHandler(AutoRelectureException.class)
+    public ResponseEntity<Map<String, String>> handleAutoRelecture(AutoRelectureException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "code", "AUTO_RELECTURE",
+                "message", ex.getMessage()
+        ));
+    }
+
+    /** Relecture déjà rendue → 409 RELECTURE_DEJA_RENDUE (M6, RG9). */
+    @ExceptionHandler(RelectureDejaRendueException.class)
+    public ResponseEntity<Map<String, String>> handleRelectureDejaRendue(
+            RelectureDejaRendueException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "code", "RELECTURE_DEJA_RENDUE",
                 "message", ex.getMessage()
         ));
     }
