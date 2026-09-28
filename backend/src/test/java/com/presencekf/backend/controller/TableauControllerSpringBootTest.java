@@ -2,12 +2,14 @@ package com.presencekf.backend.controller;
 
 import com.presencekf.backend.entity.Etudiant;
 import com.presencekf.backend.entity.Promotion;
+import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.repository.EtudiantRepository;
 import com.presencekf.backend.repository.ExerciceRepository;
 import com.presencekf.backend.repository.PresenceRepository;
 import com.presencekf.backend.repository.PromotionRepository;
 import com.presencekf.backend.repository.RelectureRepository;
 import com.presencekf.backend.repository.SessionRepository;
+import com.presencekf.backend.service.PresenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,6 +38,7 @@ class TableauControllerSpringBootTest {
     @Autowired private ExerciceRepository exerciceRepository;
     @Autowired private RelectureRepository relectureRepository;
     @Autowired private SessionRepository sessionRepository;
+    @Autowired private PresenceService presenceService;
 
     private Long promotionId;
 
@@ -49,10 +56,15 @@ class TableauControllerSpringBootTest {
         promotionRepository.save(promotion);
         promotionId = promotion.getId();
 
-        Etudiant etudiant = new Etudiant();
-        etudiant.setNom("Alice");
-        etudiant.setPromotionId(promotionId);
-        etudiantRepository.save(etudiant);
+        Etudiant alice = new Etudiant();
+        alice.setNom("Alice");
+        alice.setPromotionId(promotionId);
+        etudiantRepository.save(alice);
+
+        Etudiant bob = new Etudiant();
+        bob.setNom("Bob");
+        bob.setPromotionId(promotionId);
+        etudiantRepository.save(bob);
     }
 
     @Test
@@ -65,6 +77,28 @@ class TableauControllerSpringBootTest {
                 .andExpect(jsonPath("$[0].exercicesDeposes").value(0))
                 .andExpect(jsonPath("$[0].moyenne").value((Object) null))
                 .andExpect(jsonPath("$[0].relecturesEnAttente").value(0));
+    }
+
+    @Test
+    void presencesSequentielles_deDeuxEtudiantsApparaissentDansLeTableau() throws Exception {
+        Session session = new Session();
+        session.setTitre("Session tableau concurrence");
+        session.setCode("TAB001");
+        session.setOuvertureAt(LocalDateTime.now());
+        session.setExpirationAt(LocalDateTime.now().plusMinutes(15));
+        session.setPromotionId(promotionId);
+        session = sessionRepository.save(session);
+
+        var etudiants = etudiantRepository.findByPromotionId(promotionId);
+        for (var etudiant : etudiants) {
+            presenceService.enregistrerPresence(session.getCode(), etudiant.getId());
+        }
+
+        mockMvc.perform(get("/api/tableau").param("promotionId", promotionId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].nom", containsInAnyOrder("Alice", "Bob")))
+                .andExpect(jsonPath("$[?(@.presences == 1)]", hasSize(2)));
     }
 
     @Test
