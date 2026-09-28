@@ -68,6 +68,14 @@
 
 **IA :** Freebuff a aidé à implémenter la méthode de service, le contrôleur, les tests et le formulaire. La source `FORMATEUR`, le statut 201 et les erreurs session inconnue/validation ont été vérifiés par les tests unitaires et Spring Boot. Les vérifications finales ont été faites avec `./mvnw clean test` (21 tests) et `npm run build`.
 
+### M4 — Déposer un exercice (issue #18)
+
+**Fait :** Entité `Exercice` refondue pour V1 (`relecteurId` nullable, unicité RG16) ; nouveaux DTO `ExerciceCreateDto` et `ExerciceResponseDto` ; repository avec recherches par étudiant/session et par session. `ExerciceService` valide les URL http(s), vérifie la clôture de la session et l’unicité, puis crée le dépôt avec statut `EN_ATTENTE` (EF4, RG16). `POST /api/exercices` répond 201 avec `{id, statut}` ; les erreurs de lien invalide renvoient 400 `LIEN_INVALIDE`, les doublons 409 `EXERCICE_DEJA_DEPOSE`. Cinq tests unitaires et quatre tests d’intégration M4 ; la suite totale compte 30 tests. Formulaire React de dépôt intégré à `/etudiant`, avec API dédiée et états de chargement/erreur (F2, F3). `npm run build` passe.
+
+**Bloqué :** L’entité `Exercice`, le repository et un ancien `ExerciceDto` étaient présents sur `main`, mais l’entité et le DTO utilisaient un modèle antérieur à V1. L’entité a été refondue ; l’ancien DTO non utilisé a été laissé en place. Le repository a été complété avec les méthodes nécessaires à RG16 et à l’assignation M5.
+
+**IA :** Freebuff a aidé à refondre le mapping JPA et à implémenter la validation URI. Vérifications : liens sans schéma et schémas autres que HTTP(S) refusés ; session inconnue, dépôt dupliqué, réponse 201 et statut initial `EN_ATTENTE` couverts par les tests. `./mvnw clean test` passe (30 tests) et `npm run build` réussit.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**
