@@ -84,6 +84,14 @@
 
 **IA :** Freebuff a aidé à implémenter l’assignation, les tests et le style global. Vérifié que l’auteur et les candidats déjà occupés sont exclus, qu’un statut dédié est renvoyé en l’absence de candidat, et que les deux résultats sont présentés lisiblement côté frontend.
 
+### M6 — Rendre une relecture (issue #20)
+
+**Fait :** Entité `Relecture` conforme à V1 (unicité sur `exerciceId`), DTO d’entrée avec validation de note 0–20 et DTO de réponse. `RelectureService.rendre()` vérifie l’existence de l’exercice, l’affectation, l’auto-relecture (RG4), la double soumission (RG9) et la note (RG8), puis marque la relecture et l’exercice `RELUE`. `POST /api/relectures/{id}` utilise `{id}` comme identifiant d’exercice et renvoie 200. Les erreurs exposent les codes prévus : `NOTE_INVALIDE` (400), `AUTO_RELECTURE` (403), `RELECTURE_DEJA_RENDUE` (409). Six tests unitaires et quatre tests d’intégration couvrent le service et l’endpoint ; la suite totale compte 47 tests. Le formulaire React de relecture est disponible dans l’espace `/relecteur`.
+
+**Bloqué :** Aucun blocage majeur. Les tests d’intégration ont mis en évidence que la validation `@Valid` renvoyait initialement `VALIDATION_ERROR` pour une note hors limites ; le mapping a été aligné sur `NOTE_INVALIDE` et vérifié en intégration.
+
+**IA :** Freebuff a aidé à implémenter le parcours et les tests. Vérifié que l’identifiant de route désigne l’exercice, que le succès est HTTP 200 et que les erreurs de note, auto-relecture et double rendu utilisent les statuts/codes contractuels. `./mvnw clean test` et `npm run build` ont été exécutés.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**
