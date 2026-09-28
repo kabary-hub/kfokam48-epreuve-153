@@ -22,8 +22,11 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(e -> e.getField() + " : " + e.getDefaultMessage())
                 .orElse("Requête invalide");
+        boolean invalidReviewNote = ex.getBindingResult().getFieldErrors().stream()
+                .anyMatch(error -> "note".equals(error.getField()));
+        String code = invalidReviewNote ? "NOTE_INVALIDE" : "VALIDATION_ERROR";
         return ResponseEntity.badRequest().body(Map.of(
-                "code", "VALIDATION_ERROR",
+                "code", code,
                 "message", message
         ));
     }
