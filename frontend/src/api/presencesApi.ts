@@ -26,3 +26,22 @@ export async function marquerPresence(
   );
   return response.data;
 }
+
+export interface PresenceFormateurCreateDto {
+  sessionId: number;
+  etudiantId: number;
+}
+
+/**
+ * POST /api/presences/formateur — ajout manuel par le formateur (EF3, Q14).
+ * La présence porte source = "FORMATEUR".
+ */
+export async function ajouterPresenceFormateur(
+  dto: PresenceFormateurCreateDto
+): Promise<PresenceResponseDto> {
+  const response = await apiClient.post<PresenceResponseDto>(
+    '/api/presences/formateur',
+    dto
+  );
+  return response.data;
+}

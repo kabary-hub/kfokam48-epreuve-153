@@ -60,6 +60,14 @@
 
 **IA :** Freebuff a aidé à implémenter le flux API, le formulaire et le blocage RG3. Les règles ont été vérifiées avec les tests unitaires et d’intégration, notamment le scénario de cinq erreurs puis une réponse 429, ainsi que la suite complète `./mvnw test` (15 tests). Le build frontend a été vérifié par `npm run build`.
 
+### M3 — Ajouter une présence manuellement (issue #17)
+
+**Fait :** DTO `PresenceFormateurCreateDto` (`sessionId`, `etudiantId`), `SessionInconnueException` et réponse 404 `SESSION_INCONNUE`. `PresenceService.enregistrerPresenceFormateur` vérifie l’existence de la session et l’unicité, puis enregistre la présence avec `source=FORMATEUR` (EF3, RG13, Q14). L’endpoint `POST /api/presences/formateur` retourne 201 avec le DTO contractuel. Trois tests unitaires et trois tests d’intégration couvrent le service et l’endpoint ; la suite compte 21 tests. Le formulaire React d’ajout manuel est intégré à `/formateur`, avec affichage de la source renvoyée et états de chargement/erreur (F2, F3). `npm run build` passe.
+
+**Bloqué :** Aucun blocage significatif. La sous-étape B.1 (repository) était un NO-OP : `findBySessionIdAndEtudiantId` existait déjà depuis M2. Le CDC documentait déjà Q14/RG13 et la source `FORMATEUR` ; aucune modification supplémentaire n’a été nécessaire.
+
+**IA :** Freebuff a aidé à implémenter la méthode de service, le contrôleur, les tests et le formulaire. La source `FORMATEUR`, le statut 201 et les erreurs session inconnue/validation ont été vérifiés par les tests unitaires et Spring Boot. Les vérifications finales ont été faites avec `./mvnw clean test` (21 tests) et `npm run build`.
+
 ## Étape 3 — Enveloppe
 
 **Fait :**

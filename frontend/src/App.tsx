@@ -1,4 +1,5 @@
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom';
+import { PresenceFormateurForm } from './components/PresenceFormateurForm';
 import { SessionForm } from './components/SessionForm';
 import { EtudiantPage } from './pages/EtudiantPage';
 import { RelecteurPage } from './pages/RelecteurPage';
@@ -26,6 +27,7 @@ function App() {
                 <div className="page-formateur">
                   <h1>Espace Formateur</h1>
                   <SessionForm />
+                  <PresenceFormateurForm />
                 </div>
               }
             />
