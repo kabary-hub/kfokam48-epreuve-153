@@ -44,13 +44,53 @@ class AssignationRelecteurServiceTest {
     }
 
     @Test
-    void choisirRelecteur_sansCandidatRetourneVide() {
+    void choisirRelecteur_sansPresenceRetourneVide() {
         when(presenceRepository.findEtudiantIdsBySessionId(10L))
-                .thenReturn(List.of(1L));
+                .thenReturn(List.of());
 
         Optional<Long> relecteur = assignationRelecteurService.choisirRelecteur(10L, 1L);
 
         assertThat(relecteur).isEmpty();
-        verify(exerciceRepository, never()).existsByRelecteurIdAndSessionId(1L, 10L);
+        verify(exerciceRepository, never()).existsByRelecteurIdAndSessionId(2L, 10L);
+    }
+
+    @Test
+    void choisirRelecteur_tousLesCandidatsSontOccupesRetourneVide() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of(1L, 2L));
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(2L, 10L))
+                .thenReturn(true);
+
+        Optional<Long> relecteur = assignationRelecteurService.choisirRelecteur(10L, 1L);
+
+        assertThat(relecteur).isEmpty();
+    }
+
+    @Test
+    void choisirRelecteur_unSeulCandidatDisponibleLeRetourne() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of(1L, 2L));
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(2L, 10L))
+                .thenReturn(false);
+
+        Optional<Long> relecteur = assignationRelecteurService.choisirRelecteur(10L, 1L);
+
+        assertThat(relecteur).contains(2L);
+    }
+
+    @Test
+    void choisirRelecteur_avecPlusieursCandidatsRetourneUnCandidatDisponible() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of(1L, 2L, 3L, 4L));
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(2L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(3L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(4L, 10L))
+                .thenReturn(false);
+
+        Optional<Long> relecteur = assignationRelecteurService.choisirRelecteur(10L, 1L);
+
+        assertThat(relecteur).containsAnyOf(2L, 3L, 4L);
     }
 }
