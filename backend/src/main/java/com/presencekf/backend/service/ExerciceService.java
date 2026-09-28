@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Service métier pour les exercices.
@@ -20,19 +21,22 @@ import java.time.LocalDateTime;
  * - EF4 : dépôt du lien d'un exercice
  * - RG16 : unicité (1 exercice par étudiant et par session)
  *
- * Le statut initial est EN_ATTENTE. L'assignation d'un relecteur est faite
- * par M5 (AssignationRelecteurService), appelée séparément.
+ * M5 assigne un relecteur présent et éligible au dépôt ; si aucun candidat
+ * n'est disponible, l'exercice reçoit le statut EN_ATTENTE_SANS_RELECTEUR.
  */
 @Service
 public class ExerciceService {
 
     private final ExerciceRepository exerciceRepository;
     private final SessionRepository sessionRepository;
+    private final AssignationRelecteurService assignationRelecteurService;
 
     public ExerciceService(ExerciceRepository exerciceRepository,
-                           SessionRepository sessionRepository) {
+                           SessionRepository sessionRepository,
+                           AssignationRelecteurService assignationRelecteurService) {
         this.exerciceRepository = exerciceRepository;
         this.sessionRepository = sessionRepository;
+        this.assignationRelecteurService = assignationRelecteurService;
     }
 
     /**
@@ -68,8 +72,17 @@ public class ExerciceService {
         exercice.setSessionId(sessionId);
         exercice.setEtudiantId(etudiantId);
         exercice.setLien(lien);
-        exercice.setStatut("EN_ATTENTE");
         exercice.setDeposeAt(LocalDateTime.now());
+
+        Optional<Long> relecteur = assignationRelecteurService
+                .choisirRelecteur(sessionId, etudiantId);
+        if (relecteur.isPresent()) {
+            exercice.setRelecteurId(relecteur.get());
+            exercice.setStatut("EN_ATTENTE");
+        } else {
+            exercice.setRelecteurId(null);
+            exercice.setStatut("EN_ATTENTE_SANS_RELECTEUR");
+        }
 
         return exerciceRepository.save(exercice);
     }
