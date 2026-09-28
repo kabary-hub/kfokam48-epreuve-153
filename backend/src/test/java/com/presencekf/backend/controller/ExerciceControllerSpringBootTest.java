@@ -86,6 +86,25 @@ class ExerciceControllerSpringBootTest {
     }
 
     @Test
+    void postExercices_sansCandidat_doitRetournerStatutEnAttenteSansRelecteur() throws Exception {
+        presenceRepository.deleteAll();
+
+        String body = """
+                {
+                    "sessionId": %d,
+                    "etudiantId": 1,
+                    "lien": "https://exemple.com/exercice-sans-relecteur"
+                }
+                """.formatted(sessionId);
+
+        mockMvc.perform(post("/api/exercices")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statut").value("EN_ATTENTE_SANS_RELECTEUR"));
+    }
+
+    @Test
     void postExercices_lienInvalide_doitRetourner400() throws Exception {
         String body = """
                 {
