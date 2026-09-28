@@ -26,6 +26,17 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
      */
     boolean existsByRelecteurIdAndSessionId(Long relecteurId, Long sessionId);
 
+    /** Compte les exercices déposés par un étudiant (M7). */
+    long countByEtudiantId(Long etudiantId);
+
+    /**
+     * Compte les exercices assignés à un relecteur et pas encore relus (M7).
+     */
+    long countByRelecteurIdAndStatutNot(Long relecteurId, String statut);
+
+    /** Liste les exercices déposés par un étudiant (pour le calcul de moyenne M7). */
+    List<Exercice> findByEtudiantId(Long etudiantId);
+
     /**
      * Liste les exercices d'une session (utilisé par M5 pour assigner un
      * relecteur, et par M7 pour le tableau).

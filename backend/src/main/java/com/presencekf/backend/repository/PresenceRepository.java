@@ -31,6 +31,11 @@ public interface PresenceRepository extends JpaRepository<Presence, Long> {
     List<Long> findEtudiantIdsBySessionId(@Param("sessionId") Long sessionId);
 
     /**
+     * Compte les présences d'un étudiant (M7).
+     */
+    long countByEtudiantId(Long etudiantId);
+
+    /**
      * Compte les présences d'une session (utilisé pour le tableau M7).
      */
     long countBySessionId(Long sessionId);
