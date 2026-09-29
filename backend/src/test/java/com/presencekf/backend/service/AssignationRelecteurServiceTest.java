@@ -115,9 +115,11 @@ class AssignationRelecteurServiceTest {
 
         assertThat(choix.getRelecteur1Id()).isNotNull();
         assertThat(choix.getRelecteur2Id()).isNotNull();
-        assertThat(choix.getRelecteur1Id()).isNotEqualTo(choix.getRelecteur2Id());
-        assertThat(choix.getRelecteur1Id()).isIn(2L, 3L);
-        assertThat(choix.getRelecteur2Id()).isIn(2L, 3L);
+        Long r1 = choix.getRelecteur1Id();
+        Long r2 = choix.getRelecteur2Id();
+        assertThat(r1).isNotEqualTo(r2);
+        assertThat(r1).isIn(2L, 3L);
+        assertThat(r2).isIn(2L, 3L);
     }
 
     @Test

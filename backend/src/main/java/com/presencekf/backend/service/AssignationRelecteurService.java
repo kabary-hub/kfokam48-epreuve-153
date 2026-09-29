@@ -5,6 +5,8 @@ import com.presencekf.backend.repository.PresenceRepository;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,10 +69,11 @@ public class AssignationRelecteurService {
                 .filter(id -> !exerciceRepository.existsByRelecteur2IdAndSessionId(id, sessionId))
                 .toList();
 
-        // Mélanger et prendre les 2 premiers
-        Collections.shuffle(candidats, RANDOM);
-        Long r1 = candidats.size() >= 1 ? candidats.get(0) : null;
-        Long r2 = candidats.size() >= 2 ? candidats.get(1) : null;
+        // Mélanger et prendre les 2 premiers (copie mutable car List.of est immuable)
+        List<Long> melanges = new ArrayList<>(candidats);
+        Collections.shuffle(melanges, RANDOM);
+        Long r1 = melanges.size() >= 1 ? melanges.get(0) : null;
+        Long r2 = melanges.size() >= 2 ? melanges.get(1) : null;
 
         return new ChoixRelecteurs(r1, r2);
     }
