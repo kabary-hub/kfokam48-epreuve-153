@@ -502,13 +502,19 @@ components:
         source: { type: string, enum: [ETUDIANT, FORMATEUR], nullable: true }
     LigneTableau:
       type: object
-      required: [etudiantId, nom, presences, exercicesDeposes, moyenne, relecturesEnAttente, presencesParSession, exercicesSansRelecteur]
+      required: [etudiantId, nom, presences, exercicesDeposes, moyenne, provisoire, relecturesEnAttente, presencesParSession, exercicesSansRelecteur]
       properties:
         etudiantId: { type: integer, format: int64 }
         nom: { type: string }
         presences: { type: integer, minimum: 0 }
         exercicesDeposes: { type: integer, minimum: 0 }
         moyenne: { type: number, nullable: true, description: Moyenne calculée par l’API, arrondie à deux décimales ; null sans note. }
+        provisoire:
+          type: boolean
+          description: >
+            Vrai si la moyenne est provisoire (une seule relecture rendue sur
+            les deux attendues). Faux si les deux relectures sont rendues.
+            Conséquence du changement de besoin étape 3 (issue #53).
         relecturesEnAttente: { type: integer, minimum: 0 }
         exercicesSansRelecteur: { type: integer, minimum: 0 }
         presencesParSession:
