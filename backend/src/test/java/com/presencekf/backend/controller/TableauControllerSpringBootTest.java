@@ -116,10 +116,10 @@ class TableauControllerSpringBootTest {
 
         mockMvc.perform(get("/api/tableau").param("promotionId", promotionId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.nom=='Bob')].exercicesDeposes").value(1))
-                .andExpect(jsonPath("$[?(@.nom=='Bob')].moyenne").value(15.0))
-                .andExpect(jsonPath("$[?(@.nom=='Bob')].provisoire").value(true))
-                .andExpect(jsonPath("$[?(@.nom=='Bob')].relecturesEnAttente").value(0));
+                .andExpect(jsonPath("$[2].exercicesDeposes").value(1))
+                .andExpect(jsonPath("$[2].moyenne").value(15.0))
+                .andExpect(jsonPath("$[2].provisoire").value(true))
+                .andExpect(jsonPath("$[2].relecturesEnAttente").value(0));
 
     }
 
