@@ -23,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,7 +57,7 @@ class RelectureServiceTest {
     void exerciceInconnu_doitLancerSessionInconnueException() {
         when(exerciceRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> relectureService.rendre(99L, 2L, 15, "Bien"))
+        assertThatThrownBy(() -> relectureService.rendre(99L, null, 15, "Bien"))
                 .isInstanceOf(SessionInconnueException.class);
     }
 
@@ -64,9 +65,11 @@ class RelectureServiceTest {
     void relecteurNonAssigne_doitLancerRelecteurNonAssigneException() {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L, 3L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
-        when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
+                when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
 
-        assertThatThrownBy(() -> relectureService.rendre(1L, 4L, 15, "Bien"))
+        Long relecteurIdNonAssigne = 4L;
+
+        assertThatThrownBy(() -> relectureService.rendre(1L, relecteurIdNonAssigne, 15, "Bien"))
                 .isInstanceOf(RelecteurNonAssigneException.class);
     }
 
@@ -85,8 +88,11 @@ class RelectureServiceTest {
         Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L, 3L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
         when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
+        Long relecteurIdNoteInvalide = 2L;
+        when(relectureRepository.findByExerciceIdAndRelecteurId(eq(1L), eq(relecteurIdNoteInvalide)))
+                .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> relectureService.rendre(1L, 2L, 25, "Bien"))
+        assertThatThrownBy(() -> relectureService.rendre(1L, relecteurIdNoteInvalide, 25, "Bien"))
                 .isInstanceOf(NoteInvalideException.class);
     }
 

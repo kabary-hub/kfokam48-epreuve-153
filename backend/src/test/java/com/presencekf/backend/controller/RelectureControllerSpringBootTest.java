@@ -138,6 +138,7 @@ class RelectureControllerSpringBootTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body)
                         .param("relecteurId", "2"))
+
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("RELECTURE_DEJA_RENDUE"))
                 .andExpect(jsonPath("$.message").exists());
