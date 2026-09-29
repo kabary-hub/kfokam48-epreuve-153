@@ -1,6 +1,7 @@
 package com.presencekf.backend.controller;
 
 import com.presencekf.backend.entity.Etudiant;
+import com.presencekf.backend.entity.Exercice;
 import com.presencekf.backend.entity.Promotion;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.repository.EtudiantRepository;
@@ -69,6 +70,59 @@ class TableauControllerSpringBootTest {
 
     @Test
     void getTableau_doitRetourner200AvecLesIndicateursDeLEtudiant() throws Exception {
+        mockMvc.perform(get("/api/tableau").param("promotionId", promotionId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].etudiantId").exists())
+                .andExpect(jsonPath("$[0].nom").value("Alice"))
+                .andExpect(jsonPath("$[0].presences").value(0))
+                .andExpect(jsonPath("$[0].exercicesDeposes").value(0))
+                .andExpect(jsonPath("$[0].moyenne").value((Object) null))
+                .andExpect(jsonPath("$[0].provisoire").value(false))
+                .andExpect(jsonPath("$[0].relecturesEnAttente").value(0));
+    }
+
+    @Test
+    void getTableau_etudiantAvecExerciceProvisoire_doitRetournerProvisoireVrai() throws Exception {
+        Etudiant etudiant = new Etudiant();
+        etudiant.setNom("Bob");
+        etudiant.setPromotionId(promotionId);
+        etudiantRepository.save(etudiant);
+
+        Session session = new Session();
+        session.setTitre("Session");
+        session.setCode("TST001");
+        session.setOuvertureAt(LocalDateTime.now());
+        session.setExpirationAt(LocalDateTime.now().plusMinutes(15));
+        session.setPromotionId(promotionId);
+        sessionRepository.save(session);
+
+        Exercice exercice = new Exercice();
+        exercice.setSessionId(session.getId());
+        exercice.setEtudiantId(etudiant.getId());
+        exercice.setLien("https://exemple.com/exo");
+        exercice.setStatut("PROVISOIRE");
+        exercice.setRelecteurId(1L);
+        exercice.setDeposeAt(LocalDateTime.now());
+        exerciceRepository.save(exercice);
+
+        Relecture relecture = new Relecture();
+        relecture.setExerciceId(exercice.getId());
+        relecture.setRelecteurId(1L);
+        relecture.setNote(15);
+        relecture.setStatut("RELUE");
+        relectureRepository.save(relecture);
+
+        mockMvc.perform(get("/api/tableau").param("promotionId", promotionId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nom").value("Bob"))
+                .andExpect(jsonPath("$[0].exercicesDeposes").value(1))
+                .andExpect(jsonPath("$[0].moyenne").value(15.0))
+                .andExpect(jsonPath("$[0].provisoire").value(true))
+                .andExpect(jsonPath("$[0].relecturesEnAttente").value(0));
+    }
+
+    @Test
+    void getTableau_promotionInconnue_doitRetourner404() throws Exception {
         mockMvc.perform(get("/api/tableau").param("promotionId", promotionId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].etudiantId").exists())
