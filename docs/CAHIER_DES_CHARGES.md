@@ -94,7 +94,7 @@ Justification :
 | RG2 | Un étudiant ne peut pas marquer sa présence après l'expiration du code | Q3 |
 | RG3 | Après 5 tentatives de code erronées consécutives, l'étudiant est bloqué pendant 2 minutes | Q4 |
 | RG4 | Un étudiant ne peut jamais relire son propre exercice | Q5 |
-| RG5 | Un exercice a exactement un seul relecteur | Q6 |
+| RG5 | Un exercice a exactement DEUX relecteurs distincts. La note finale est la MOYENNE des deux notes. Si un seul des deux a rendu, la note affichée est provisoire. | Changement de besoin (enveloppe étape 3), casse Q6 |
 | RG6 | Le relecteur est choisi au hasard parmi les étudiants présents à la session (hors auteur) | Q7 |
 | RG7 | L'étudiant relu voit la note et le commentaire, mais jamais le nom ni l'identifiant du relecteur | Q8 |
 | RG8 | La note est un entier compris entre 0 et 20 inclus | Q9 |
@@ -106,7 +106,11 @@ Justification :
 | RG14 | Après clôture de la session par le formateur, une relecture rendue est définitive et non modifiable ; toute tentative de rendre ou modifier une relecture sur une session clôturée est refusée | Q15 corrigée par Q10 |
 | RG15 | Un étudiant ne peut être présent qu'une seule fois par session (unicité) | implicite (déduit de Q2) |
 | RG16 | Un étudiant ne peut déposer qu'un seul exercice par session (unicité) | implicite (déduit de Q4) |
-| RG17 | Un étudiant ne peut être relecteur que d'un seul exercice par session | implicite (déduit de RG5 + Q6) |
+| RG18 | Un étudiant ne peut jamais relire deux fois le même exercice, ni être son propre relecteur | déduite de RG4 + Q5 + changement de besoin |
+
+Définitions d'états liées au changement de besoin :
+- `PROVISOIRE` : un seul des deux relecteurs assignés a rendu sa relecture. La note affichée est celle du seul relecteur ayant rendu, marquée comme provisoire.
+- `RELUE` (double relecture) : les deux relectures sont rendues ; la note retenue est la moyenne des deux notes.
 
 Décision Q10 > Q15 :
 Q10 indique qu'une relecture est modifiable tant que la session n'est pas clôturée. Q15 affirme qu'une note envoyée est définitive. Ces deux réponses se contredisent. Q10 l'emporte car : (1) Q11 décrit un usage concret du formateur qui implique un état intermédiaire avant clôture, (2) Q10 décrit un mécanisme conditionné et précis, (3) Q15 formule une intention générale (« c'est plus honnête ») sans mécanisme. Conséquence : seule la note est modifiable avant clôture ; le commentaire initial reste immuable.
@@ -123,7 +127,7 @@ La clôture de session est une action manuelle du formateur (Q12). Aucune clôtu
 
 | Réponses en conflit | Ce que j'ai choisi | Pourquoi |
 |---|---|---|
-| Q10 (« relecteur peut corriger tant que la session n'est pas clôturée ») vs Q15 (« la note est définitive une fois envoyée ») | Q10 l'emporte : la note reste modifiable tant que la session n'est pas clôturée ; seul le commentaire initial est immuable | Q10 décrit un mécanisme concret et conditionné, cohérent avec Q11 (l'existence d'un état « en attente » avant clôture). Q15 formule une intention générale (« c'est plus honnête ») sans mécanisme associé. La règle RG9 formalise cette décision. |
+| Q6 (1 seul relecteur) vs changement de besoin étape 3 (2 relecteurs) | Le changement l'emporte : 2 relecteurs par exercice | Le changement est explicite et daté ; Q6 est l'ancienne règle, obsolète |
 
 ### 7.2 — Trous comblés par hypothèse raisonnable
 
@@ -136,12 +140,14 @@ La clôture de session est une action manuelle du formateur (Q12). Aucune clôtu
 | EF4 : qu'est-ce qu'un URI valide pour le lien d'exercice ? | Le lien doit être une URL absolue HTTP ou HTTPS avec un nom d'hôte ; les autres schémas, liens relatifs et URI mal formées sont refusés | Validation backend avant dépôt ; réponse 400 `{code: LIEN_INVALIDE, message: ...}` conformément au contrat |
 | Q16 (« voir combien d'exercices il a déposés, la moyenne des notes reçues, les relectures en attente ») : la moyenne inclut-elle les exercices non relus ? | La moyenne est calculée uniquement sur les exercices RELUS. Si aucun exercice n'a été relu, la moyenne est null (et non 0) | GET /api/tableau renvoie moyenne = null si aucun exercice relu ; EF9 précise le calcul |
 | Q4 (« 5 erreurs → bloqué 2 minutes ») : comment compter les erreurs si le code ne correspond à aucune session ? | Avec le contrat `{code, etudiantId}`, un code inconnu ne permet pas d'identifier la session. M2 compte donc ces erreurs au niveau de l'étudiant (clé logique `etudiantId:*`, représentée en mémoire par `etudiantId:null`). Le stockage est en mémoire (`ConcurrentHashMap`) et est réinitialisé au redémarrage ; une erreur sur code inconnu ne peut pas être isolée par session. | RG3 est appliquée à l'étudiant pour les codes inconnus ; compteur et échéance de blocage en mémoire, non persistants (acceptable pour le prototype d'épreuve). La règle est implémentée et testée dans `PresenceService` ; un blocage renvoie HTTP 429 `TROP_TENTATIVES`. Un code valide mais expiré relève de RG1/RG2 et renvoie 410 `CODE_EXPIRE`. |
+| Changement de besoin : comment calculer la note si un seul relecteur a rendu ? | On affiche la note du seul relecteur, marquée "provisoire" (champ booléen dans le tableau) | GET /api/tableau expose `provisoire: true/false` par étudiant |
 
 La règle RG11 documente déjà que le dépôt est autorisé jusqu'à la clôture manuelle et refusé après celle-ci.
 
 ### 7.3 — Décisions structurantes
 
 - Le relecteur n'est pas une entité séparée : c'est un étudiant dans un état particulier (assigné à une relecture). Conséquence : table Relecture avec relecteurId → Etudiant, pas d'entité Relecteur.
+- Suite au changement de besoin (enveloppe étape 3), la règle "un seul relecteur" (Q6, RG5) est remplacée par "2 relecteurs distincts avec note = moyenne". Cette décision est prise APRÈS la première version, en réponse à un feedback client explicite.
 - Le code de présence est généré aléatoirement (SecureRandom, 6 caractères alphanumériques). Aucune liste prédéfinie.
 - Aucune clôture automatique : la session est clôturée manuellement par le formateur (RG11, RG14, Q12).
 - Toutes les erreurs respectent le format {code, message} imposé par le contrat d'API, sans exception.
