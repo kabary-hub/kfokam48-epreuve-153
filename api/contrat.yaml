@@ -341,8 +341,16 @@ paths:
     post:
       tags: [Relectures]
       summary: Soumettre une première note et son commentaire (opération imposée)
+      description: >
+        Le relecteur soumet sa note. Le paramètre `relecteurId` est requis
+        pour identifier le relecteur (pas d'authentification, Q1).
       parameters:
         - $ref: '#/components/parameters/Id'
+        - name: relecteurId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+          description: Identifiant du relecteur qui rend la note (issue #53).
       requestBody:
         required: true
         content:
@@ -359,6 +367,11 @@ paths:
       description: Extension requise par Q10 ; le commentaire initial reste immuable après la première soumission. Après la clôture manuelle (Q12), la note devient définitive.
       parameters:
         - $ref: '#/components/parameters/Id'
+        - name: relecteurId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+          description: Identifiant du relecteur qui modifie la note (issue #53).
       requestBody:
         required: true
         content:

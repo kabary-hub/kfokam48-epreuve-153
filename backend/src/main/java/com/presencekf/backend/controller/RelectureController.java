@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -31,9 +32,10 @@ public class RelectureController {
     @PostMapping("/{id}")
     public ResponseEntity<RelectureResponseDto> rendre(
             @PathVariable Long id,
+            @RequestParam Long relecteurId,
             @Valid @RequestBody RelectureCreateDto dto) {
         Relecture relecture = relectureService.rendre(
-                id, dto.getNote(), dto.getCommentaire());
+                id, relecteurId, dto.getNote(), dto.getCommentaire());
         return ResponseEntity.ok(new RelectureResponseDto(
                 relecture.getId(),
                 relecture.getExerciceId(),
