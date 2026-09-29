@@ -78,7 +78,7 @@ class PresenceServiceTest {
                 .thenReturn(Optional.of(sessionValide(1L)));
         when(presenceRepository.findBySessionIdAndEtudiantId(1L, 1L))
                 .thenReturn(Optional.empty());
-        when(presenceRepository.save(any(Presence.class)))
+        when(presenceRepository.saveAndFlush(any(Presence.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         Presence presence = presenceService.enregistrerPresence("ABC123", 1L);

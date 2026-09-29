@@ -61,7 +61,7 @@ class PresenceServiceFormateurTest {
         when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
         when(presenceRepository.findBySessionIdAndEtudiantId(1L, 2L))
                 .thenReturn(Optional.empty());
-        when(presenceRepository.save(any(Presence.class)))
+        when(presenceRepository.saveAndFlush(any(Presence.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         Presence presence = presenceService.enregistrerPresenceFormateur(1L, 2L);

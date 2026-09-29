@@ -9,7 +9,9 @@ import com.presencekf.backend.exception.SessionInconnueException;
 import com.presencekf.backend.exception.TropTentativesException;
 import com.presencekf.backend.repository.PresenceRepository;
 import com.presencekf.backend.repository.SessionRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -52,6 +54,7 @@ public class PresenceService {
     /**
      * Enregistre une présence à partir d'un code de session.
      */
+    @Transactional
     public Presence enregistrerPresence(String code, Long etudiantId) {
         verifierBlocage(etudiantId);
 
@@ -80,9 +83,14 @@ public class PresenceService {
         presence.setSource("ETUDIANT");
         presence.setMarqueAt(LocalDateTime.now());
 
-        Presence saved = presenceRepository.save(presence);
-        reinitialiserTentatives(etudiantId);
-        return saved;
+        try {
+            Presence saved = presenceRepository.saveAndFlush(presence);
+            reinitialiserTentatives(etudiantId);
+            return saved;
+        } catch (DataIntegrityViolationException exception) {
+            throw new DejaPresentException(
+                    "Une présence existe déjà pour cet étudiant sur cette session.");
+        }
     }
 
     /**
@@ -96,6 +104,7 @@ public class PresenceService {
      * @throws SessionInconnueException si la session n'existe pas
      * @throws DejaPresentException    si l'étudiant est déjà présent (RG15)
      */
+    @Transactional
     public Presence enregistrerPresenceFormateur(Long sessionId, Long etudiantId) {
         sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new SessionInconnueException(
@@ -113,7 +122,12 @@ public class PresenceService {
         presence.setSource("FORMATEUR");
         presence.setMarqueAt(LocalDateTime.now());
 
-        return presenceRepository.save(presence);
+        try {
+            return presenceRepository.saveAndFlush(presence);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DejaPresentException(
+                    "Une présence existe déjà pour cet étudiant sur cette session.");
+        }
     }
 
     /** Vérifie et retire les blocages expirés associés à l'étudiant. */
