@@ -1,13 +1,18 @@
 # D4 — États-transitions du cycle de vie d'un exercice (BONUS)
 
+> **Note étape 3** : ces diagrammes ont été mis à jour suite au
+> changement de besoin (double relecture, 2 relecteurs par exercice).
+> Voir CDC section 7 et issue #53.
+
 **Objet** : un Exercice déposé par un étudiant pour une session.  
 **Statuts possibles** (cohérents avec D2, colonne `Exercice.statut`) :
 - `DEPOSE`
 - `EN_ATTENTE`
 - `EN_ATTENTE_SANS_RELECTEUR`
+- `PROVISOIRE`
 - `RELUE`
 
-**Règles couvertes** : RG4 (pas d'auto-relecture), RG5 (un seul relecteur), RG9 (Q10 > Q15 : commentaire immuable, note modifiable avant clôture), RG11 (dépôt jusqu'à clôture), RG12 (remplacement tant que non relu), RG16 (un exercice par étudiant et par session).
+**Règles couvertes** : RG4 (pas d'auto-relecture), RG5 (2 relecteurs distincts, note = moyenne, provisoire si 1 seule relecture — changement de besoin enveloppe étape 3), RG9 (Q10 > Q15 : commentaire immuable, note modifiable avant clôture), RG11 (dépôt jusqu'à clôture), RG12 (remplacement tant que non relu), RG16 (un exercice par étudiant et par session), RG18 (un étudiant ne relit jamais deux fois le même exercice ni ne se relit lui-même).
 
 ```mermaid
 stateDiagram-v2
@@ -21,12 +26,15 @@ stateDiagram-v2
     EN_ATTENTE --> EN_ATTENTE: remplacer le lien avant relecture rendue (EF5, RG12)
     EN_ATTENTE_SANS_RELECTEUR --> EN_ATTENTE_SANS_RELECTEUR: remplacer le lien avant relecture rendue (EF5, RG12)
 
-    EN_ATTENTE --> RELUE: relecteur rend sa note et son commentaire (POST /api/relectures/{id}, EF7, RG8)
+    EN_ATTENTE --> PROVISOIRE: premier relecteur rend sa note (POST /api/relectures/{id}, EF7, RG8) ; note provisoire
+    PROVISOIRE --> RELUE: second relecteur rend sa note (POST /api/relectures/{id}) ; note = moyenne
+    EN_ATTENTE --> RELUE: seul relecteur assigné rend sa note (1 relecture, cas rare)
 
     RELUE --> RELUE: relecteur modifie sa note avant clôture (EF8, RG9, Q10 > Q15) ; commentaire initial immuable
 
     EN_ATTENTE --> CLOTUREE_EN_ATTENTE: session clôturée sans relecture rendue (Q11, RG11)
     EN_ATTENTE_SANS_RELECTEUR --> CLOTUREE_SANS_RELECTEUR: session clôturée sans relecteur (Q11, RG11)
+    PROVISOIRE --> CLOTUREE_PROVISOIRE: session clôturée avec une seule relecture rendue (Q11, RG11) ; note provisoire définitive
     RELUE --> CLOTUREE_RELUE: session clôturée, relecture définitive (RG14)
 
     state CLOTUREE_EN_ATTENTE <<final>>
@@ -57,7 +65,9 @@ testable en un seul appel API.
 | `EN_ATTENTE_SANS_RELECTEUR` | `EN_ATTENTE` | Une nouvelle présence permet l'assignation | EF6 |
 | `EN_ATTENTE` | `EN_ATTENTE` | L'étudiant remplace le lien avant relecture rendue | EF5, RG12 |
 | `EN_ATTENTE_SANS_RELECTEUR` | `EN_ATTENTE_SANS_RELECTEUR` | L'étudiant remplace le lien avant relecture rendue | EF5, RG12 |
-| `EN_ATTENTE` | `RELUE` | Le relecteur rend une note et un commentaire | EF7, RG8 |
+| `EN_ATTENTE` | `PROVISOIRE` | Premier relecteur rend sa note ; la note affichée est provisoire | EF7, RG8 |
+| `PROVISOIRE` | `RELUE` | Second relecteur rend sa note ; la note retenue est la moyenne | Changement de besoin (enveloppe étape 3) |
+| `EN_ATTENTE` | `RELUE` | Le seul relecteur assigné rend sa note (1 relecture) | EF7, RG8, changement de besoin |
 | `RELUE` | `RELUE` | Le relecteur modifie uniquement sa note avant clôture | EF8, RG9, Q10 > Q15 |
 | `EN_ATTENTE` | `CLOTUREE_EN_ATTENTE` | Session clôturée sans relecture | RG11, Q11 |
 | `EN_ATTENTE_SANS_RELECTEUR` | `CLOTUREE_SANS_RELECTEUR` | Session clôturée sans relecteur | RG11, Q11 |

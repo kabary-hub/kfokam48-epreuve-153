@@ -69,7 +69,9 @@ classDiagram
     Etudiant "1" --> "*" Presence : marque
     Etudiant "1" --> "*" Exercice : depose
     Etudiant "1" --> "*" Relecture : rend
-    Exercice "1" --> "0..1" Relecture : est_relu_par
+    Exercice "1" --> "*" Relecture : est_relu_par (2 relectures max par exercice, changement de besoin enveloppe étape 3)
 ```
 
 `Exercice.relecteurId` est nullable : si aucun étudiant présent admissible n'est disponible pour relire l'exercice, il n'y a pas encore de relecteur affecté et l'exercice reste visible avec le statut `EN_ATTENTE_SANS_RELECTEUR` (Q7, Q11, Q12).
+
+> Note étape 3 : la contrainte unique est maintenant `(exerciceId, relecteurId)` et non plus `exerciceId` seul. Un exercice peut avoir 2 relectures (2 relecteurs distincts), mais un même relecteur ne peut relire qu'une fois le même exercice (RG18). Voir CDC section 7 et issue #53.
