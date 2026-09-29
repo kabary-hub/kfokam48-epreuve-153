@@ -31,4 +31,14 @@ ALTER TABLE relectures
 CREATE INDEX IF NOT EXISTS idx_relectures_exercice
     ON relectures(exercice_id);
 
+-- Étape 4 : ajouter relecteur2_id (nullable) sur exercices
+-- Champ nullable : les exercices existants restent avec 1 seul relecteur
+-- (statut PROVISOIRE après 1re relecture, RELUE après 2e)
+ALTER TABLE exercices
+    ADD COLUMN IF NOT EXISTS relecteur2_id BIGINT REFERENCES etudiants(id);
+
+-- Étape 5 : index pour les requêtes par relecteur2 (bonus performance)
+CREATE INDEX IF NOT EXISTS idx_exercices_relecteur2
+    ON exercices(relecteur2_id);
+
 -- Fin de la migration V2.

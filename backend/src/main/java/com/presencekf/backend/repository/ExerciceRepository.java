@@ -26,6 +26,12 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
      */
     boolean existsByRelecteurIdAndSessionId(Long relecteurId, Long sessionId);
 
+    /**
+     * Vérifie si un étudiant est déjà affecté comme 2e relecteur dans cette
+     * session (issue #53).
+     */
+    boolean existsByRelecteur2IdAndSessionId(Long relecteur2Id, Long sessionId);
+
     /** Compte les exercices déposés par un étudiant (M7). */
     long countByEtudiantId(Long etudiantId);
 
