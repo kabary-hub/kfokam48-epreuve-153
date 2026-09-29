@@ -40,15 +40,17 @@ public class RelectureService {
     }
 
     /**
-     * Enregistre une première relecture pour un exercice.
+     * Enregistre une relecture pour un exercice (M6, EF7, issue #53).
      *
      * @param exerciceId identifiant de l'exercice à relire
+     * @param relecteurId identifiant du relecteur qui rend la note
      * @param note note entière entre 0 et 20
      * @param commentaire commentaire (éventuellement nul)
      * @return la relecture créée ou mise à jour
      */
     @Transactional
-    public Relecture rendre(Long exerciceId, Integer note, String commentaire) {
+    public Relecture rendre(Long exerciceId, Long relecteurId,
+                           Integer note, String commentaire) {
         Exercice exercice = exerciceRepository.findById(exerciceId)
                 .orElseThrow(() -> new SessionInconnueException(
                         "Aucun exercice ne correspond à cet identifiant."));
@@ -62,22 +64,28 @@ public class RelectureService {
                     "La session est clôturée, aucune relecture n'est possible.");
         }
 
-        if (exercice.getRelecteurId() == null) {
-            throw new AutoRelectureException(
-                    "Aucun relecteur n'est assigné à cet exercice.");
+        // Vérifier que le relecteur est bien assigné (1er ou 2e relecteur)
+        if (exercice.getRelecteurId() == null
+                || (!relecteurId.equals(exercice.getRelecteurId())
+                    && !relecteurId.equals(exercice.getRelecteur2Id()))) {
+            throw new RelecteurNonAssigneException(
+                    "Cet étudiant n'est pas relecteur de cet exercice.");
         }
 
-        if (exercice.getRelecteurId().equals(exercice.getEtudiantId())) {
+        // Vérifier que le relecteur n'est pas l'auteur (Q5, RG4)
+        if (relecteurId.equals(exercice.getEtudiantId())) {
             throw new AutoRelectureException(
                     "Un étudiant ne peut pas relire son propre exercice.");
         }
 
-        Relecture relecture = relectureRepository.findByExerciceId(exerciceId)
-                .orElse(null);
-        if (relecture != null && "RELUE".equals(relecture.getStatut())) {
+        // Vérifier si le relecteur a déjà rendu sa relecture
+        Optional<Relecture> existing =
+                relectureRepository.findByExerciceIdAndRelecteurId(exerciceId,
+                        relecteurId);
+        if (existing.isPresent() && "RELUE".equals(existing.get().getStatut())) {
             // Une relecture rendue est définitive (M8, RG14).
             throw new RelectureDejaRendueException(
-                    "Une relecture a déjà été rendue pour cet exercice.");
+                    "Vous avez déjà rendu cette relecture.");
         }
 
         if (note == null || note < 0 || note > 20) {
@@ -85,18 +93,28 @@ public class RelectureService {
                     "La note doit être un entier entre 0 et 20.");
         }
 
-        if (relecture == null) {
-            relecture = new Relecture();
-            relecture.setExerciceId(exerciceId);
-            relecture.setRelecteurId(exercice.getRelecteurId());
-        }
+        // Créer ou mettre à jour la relecture
+        Relecture relecture = existing.orElseGet(() -> {
+            Relecture r = new Relecture();
+            r.setExerciceId(exerciceId);
+            r.setRelecteurId(relecteurId);
+            return r;
+        });
         relecture.setNote(note);
         relecture.setCommentaire(commentaire);
         relecture.setStatut("RELUE");
         relecture.setRendueAt(LocalDateTime.now());
         Relecture savedRelecture = relectureRepository.save(relecture);
 
-        exercice.setStatut("RELUE");
+        // Calculer le statut de l'exercice (PROVISOIRE ou RELUE)
+        long nbRendues =
+                relectureRepository.countByExerciceIdAndStatut(exerciceId,
+                        "RELUE");
+        if (nbRendues >= 2) {
+            exercice.setStatut("RELUE");
+        } else {
+            exercice.setStatut("PROVISOIRE");
+        }
         exerciceRepository.save(exercice);
 
         return savedRelecture;
