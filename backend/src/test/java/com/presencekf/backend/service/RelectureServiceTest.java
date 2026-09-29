@@ -56,7 +56,7 @@ class RelectureServiceTest {
     void exerciceInconnu_doitLancerSessionInconnueException() {
         when(exerciceRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> relectureService.rendre(99L, 15, "Bien"))
+        assertThatThrownBy(() -> relectureService.rendre(99L, 2L, 15, "Bien"))
                 .isInstanceOf(SessionInconnueException.class);
     }
 
@@ -82,11 +82,11 @@ class RelectureServiceTest {
 
     @Test
     void noteHorsLimites_doitLancerNoteInvalideException() {
-        Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L);
+        Exercice exercice = exerciceAvecRelecteur(1L, 1L, 2L, 3L);
         when(exerciceRepository.findById(1L)).thenReturn(Optional.of(exercice));
         when(sessionRepository.findById(1L)).thenReturn(Optional.of(new Session()));
 
-        assertThatThrownBy(() -> relectureService.rendre(1L, 25, "Bien"))
+        assertThatThrownBy(() -> relectureService.rendre(1L, 2L, 25, "Bien"))
                 .isInstanceOf(NoteInvalideException.class);
     }
 

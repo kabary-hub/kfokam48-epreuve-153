@@ -5,6 +5,7 @@ import com.presencekf.backend.entity.Relecture;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.AutoRelectureException;
 import com.presencekf.backend.exception.NoteInvalideException;
+import com.presencekf.backend.exception.RelecteurNonAssigneException;
 import com.presencekf.backend.exception.RelectureDejaRendueException;
 import com.presencekf.backend.exception.SessionClotureeException;
 import com.presencekf.backend.exception.SessionInconnueException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Service métier pour les relectures (M6, EF7).
