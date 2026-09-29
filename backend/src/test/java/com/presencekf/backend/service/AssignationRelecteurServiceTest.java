@@ -94,4 +94,77 @@ class AssignationRelecteurServiceTest {
         assertThat(relecteur).isPresent();
         assertThat(relecteur.orElseThrow()).isIn(2L, 3L, 4L);
     }
+
+    // Tests sur choisirRelecteurs (issue #53 : 2 relecteurs par exercice)
+
+    @Test
+    void choisirRelecteurs_deuxCandidatsDisponiblesRetourneDeuxRelecteurs() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of(1L, 2L, 3L));
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(2L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(3L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteur2IdAndSessionId(2L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteur2IdAndSessionId(3L, 10L))
+                .thenReturn(false);
+
+        AssignationRelecteurService.ChoixRelecteurs choix =
+                assignationRelecteurService.choisirRelecteurs(10L, 1L);
+
+        assertThat(choix.getRelecteur1Id()).isNotNull();
+        assertThat(choix.getRelecteur2Id()).isNotNull();
+        assertThat(choix.getRelecteur1Id()).isNotEqualTo(choix.getRelecteur2Id());
+        assertThat(choix.getRelecteur1Id()).isIn(2L, 3L);
+        assertThat(choix.getRelecteur2Id()).isIn(2L, 3L);
+    }
+
+    @Test
+    void choisirRelecteurs_unSeulCandidatDisponibleRetourneUnSeulRelecteur() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of(1L, 2L));
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(2L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteur2IdAndSessionId(2L, 10L))
+                .thenReturn(false);
+
+        AssignationRelecteurService.ChoixRelecteurs choix =
+                assignationRelecteurService.choisirRelecteurs(10L, 1L);
+
+        assertThat(choix.getRelecteur1Id()).isEqualTo(2L);
+        assertThat(choix.getRelecteur2Id()).isNull();
+    }
+
+    @Test
+    void choisirRelecteurs_aucunCandidatDisponibleRetourneDesNull() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of());
+
+        AssignationRelecteurService.ChoixRelecteurs choix =
+                assignationRelecteurService.choisirRelecteurs(10L, 1L);
+
+        assertThat(choix.getRelecteur1Id()).isNull();
+        assertThat(choix.getRelecteur2Id()).isNull();
+    }
+
+    @Test
+    void choisirRelecteurs_deuxCandidatsMaisUnEstDeja2eRelecteurRetourneUnSeul() {
+        when(presenceRepository.findEtudiantIdsBySessionId(10L))
+                .thenReturn(List.of(1L, 2L, 3L));
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(2L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteurIdAndSessionId(3L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteur2IdAndSessionId(2L, 10L))
+                .thenReturn(false);
+        when(exerciceRepository.existsByRelecteur2IdAndSessionId(3L, 10L))
+                .thenReturn(true); // 3 est déjà 2e relecteur
+
+        AssignationRelecteurService.ChoixRelecteurs choix =
+                assignationRelecteurService.choisirRelecteurs(10L, 1L);
+
+        assertThat(choix.getRelecteur1Id()).isEqualTo(2L);
+        assertThat(choix.getRelecteur2Id()).isNull();
+    }
 }
