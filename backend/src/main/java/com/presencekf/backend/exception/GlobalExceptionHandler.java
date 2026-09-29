@@ -176,12 +176,12 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    /** Relecteur non assigné → 403 REELECTEUR_NON_ASSIGNE (issue #53, RG4/RG5). */
+    /** Relecteur non assigné → 403 RELECTEUR_NON_ASSIGNE (issue #53, RG4/RG5). */
     @ExceptionHandler(RelecteurNonAssigneException.class)
     public ResponseEntity<Map<String, String>> handleRelecteurNonAssigne(
             RelecteurNonAssigneException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                "code", "REELECTEUR_NON_ASSIGNE",
+                "code", "RELECTEUR_NON_ASSIGNE",
                 "message", ex.getMessage()
         ));
     }
