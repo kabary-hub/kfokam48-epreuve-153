@@ -1,56 +1,43 @@
 # Soumission — Épreuve finale fullstack KFOKAM48
 
-> À compléter et à vérifier avant téléversement sur la plateforme, avant 18h00. Cette version contient déjà les identifiants de projet et les choix de pilotage, mais reste à remplir pour les étapes de code et les épreuves Git.
-
 ## Candidat
 
 | | |
 |---|---|
 | Nom et prénom(s) | BOUBACAR SIDDIGHI BALDE |
-| Matricule | kf48-153 (à valider avec l’identifiant officiel de l’examinateur) |
+| Matricule | KF48-YAO-153 |
 | Centre | Yaoundé |
 | Compte GitHub | kabary-hub |
 
-## Projets
+## Projet
 
 | | |
 |---|---|
-| Projet | https://github.com/kabary-hub/kfokam48-epreuve-153 |
-| Épreuve Git (autonome) | https://github.com/kabary-hub/kfokam48-gitlab-153 |
+| Dépôt (public) | https://github.com/kabary-hub/kfokam48-epreuve-153 |
+| Commit final — hash complet, 40 caractères | f9885f8d25a84cfcdb15eb412ed879c39c46d684 |
+| Branche | main |
+
+## Épreuve Git — étape 5
+
+| | |
+|---|---|
+| Dépôt (public) | https://github.com/kabary-hub/kfokam48-gitlab-153 |
+| Commit final — hash complet, 40 caractères | (à compléter) |
 
 ## Technique
 
 | | |
 |---|---|
-| Frontend | React + TypeScript + Vite |
-| Backend | Spring Boot 17+, Maven |
-| Base de données | PostgreSQL |
-| Migration | Flyway |
-| Mode de test cible | Maven + Vitest + integration Spring |
-| Démarrage | `docker compose up --build` |
+| Frontend utilisé | React + Vite + TypeScript |
+| Base de données | PostgreSQL 16 (Docker Compose) |
+| Commandes de démarrage | Voir README.md — `cd backend && ./mvnw spring-boot:run` + `cd frontend && npm run dev` |
 
-## Livrables de l’analyse
+## Ce que j'ai livré
 
-| Document | Emplacement |
-|---|---|
-| Cahier des charges | `docs/CAHIER_DES_CHARGES.md` |
-| Diagrammes | `docs/diagrammes/*.md` |
-| Backlog | `docs/BACKLOG.md` |
-| Contrat | `api/contrat.yaml` |
-| Journal | `docs/JOURNAL.md` |
-| Guide dry | `README.md` |
+L'application PresenceKF complète : gestion des sessions, marquage de présence par code, dépôt d'exercices, assignation automatique de relecteurs, double relecture (changement de besoin étape 3), tableau récapitulatif du formateur, clôture manuelle des sessions. 79 tests backend (unitaires + intégration) passent. Frontend React + Vite avec 3 écrans (formateur, étudiant, relecteur) et états de chargement/erreur. Sacrifice assumé : les 5 tickets Should (S1-S5) n'ont pas été livrés pour absorber le changement de besoin.
 
-## À faire avant la soumission
+---
 
-- Créer les issues GitHub correspondant aux tickets du backlog.
-- Poser le commit `[JALON] analyse` après la création des issues.
-- Valider que le dépôt est accessible depuis une navigation privée.
-- S'assurer que le README est testé depuis un clone vierge.
-- Préparer `CHANGELOG.md` et valider `SOUMISSION.md` avant l'envoi.
-- Ne pas pousser après la fin du travail finalisé.
+**Déclaration.** J'ai réalisé ce travail seul. Les outils d'IA étaient autorisés sans restriction et je les ai utilisés ; mon journal indique où et comment j'ai vérifié leurs réponses. Mes dépôts resteront publics et inchangés jusqu'à la publication des résultats.
 
-## Déclaration
-
-> J'ai réalisé ce travail seul. Les outils d'IA étaient autorisés sans restriction, et ce journal indique comment j'ai vérifié leurs réponses. Les dépôts resteront publics et inchangés jusqu'à la publication des résultats.
-
-Signature : ______________________  Date : __________
+Signature : BOUBACAR SIDDIGHI BALDE  Date : 25 septembre 2026
