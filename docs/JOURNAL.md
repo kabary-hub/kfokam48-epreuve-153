@@ -137,3 +137,26 @@
 **Fait :**
 
 **Ce que je referais autrement avec plus de temps :**
+
+## Étape 3 — Enveloppe (bug + changement)
+
+### Bug #52 — Présences simultanées non reproduites
+
+**Fait :** Issue #52 créée pour documenter le symptôme du client ("2 étudiants tapent le code en même temps, 1 seul apparaît"). Le scénario de concurrence (2 puis 10 threads simultanés) n'a pas permis de reproduire la race condition. Investigation : PresenceService n'avait ni @Transactional ni capture de DataIntegrityViolationException — vulnérabilité réelle même sans reproduction exacte. Branche fix/race-condition-presence avec 2 commits : test de robustesse (échoue avant, passe après) + fix (transaction + saveAndFlush + traduction en DejaPresentException).
+
+**Bloqué :** Le symptôme exact n'a pas été reproduit. Décision : traiter la vulnérabilité identifiée (bonne pratique Spring) plutôt que de prétendre avoir reproduit un bug inexistant dans le scénario testé.
+
+**IA :** Freebuff a proposé plusieurs itérations de test de concurrence, toutes vertes. J'ai décidé d'arrêter la recherche de reproduction et de corriger la vulnérabilité documentée.
+
+### Changement #53 — Double relecture
+
+**Fait :** Issue #53 créée. Impact : 1 relecteur → 2 relecteurs par exercice, note = moyenne des 2, provisoire si 1 seule relecture. LOT A : CDC mis à jour (RG5 remplacée, RG18 ajoutée, contradictions tranchées), diagrammes D2 et D4 corrigés. LOT B : contrat api/contrat.yaml (+ champ provisoire) et migration V2 (UNIQUE exercice_id retirée, UNIQUE (exercice_id, relecteur_id) ajoutée, relecteur2_id sur exercices). LOT C : backend complet. LOT D : frontend (badge provisoire dans le tableau, relecteurId optionnel dans le formulaire). 74 tests passent.
+
+**Bloqué :** 3 corrections en cascade : typo RELECTEUR_NON_ASSIGNE, import manquant eq() dans les tests, stub manquant sessionRepository. Toutes corrigées manuellement.
+
+**IA :** Freebuff a implémenté le backend et le frontend. Vérifié que la moyenne est calculée côté API (F3), que les 2 relecteurs sont distincts (RG18), et que le provisoire est correctement propagé.
+
+### Sacrifice de périmètre
+
+**Décision :** Le changement #53 est un Must tardif. Pour l'absorber dans le temps imparti, on sacrifie les 5 tickets Should (S1-S5) : S1, S2, S3, S4, S5. Ces tickets restent ouverts comme "Could / Won't" pour cette épreuve. Un périmètre réduit et assumé vaut mieux qu'un périmètre annoncé et non tenu.
+
