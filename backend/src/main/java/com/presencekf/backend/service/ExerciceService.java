@@ -75,13 +75,15 @@ public class ExerciceService {
         exercice.setLien(lien);
         exercice.setDeposeAt(LocalDateTime.now());
 
-        Optional<Long> relecteur = assignationRelecteurService
-                .choisirRelecteur(sessionId, etudiantId);
-        if (relecteur.isPresent()) {
-            exercice.setRelecteurId(relecteur.get());
+        AssignationRelecteurService.ChoixRelecteurs choix =
+                assignationRelecteurService.choisirRelecteurs(sessionId, etudiantId);
+        exercice.setRelecteurId(choix.getRelecteur1Id());
+        exercice.setRelecteur2Id(choix.getRelecteur2Id());
+        if (choix.getRelecteur1Id() != null) {
             exercice.setStatut("EN_ATTENTE");
         } else {
             exercice.setRelecteurId(null);
+            exercice.setRelecteur2Id(null);
             exercice.setStatut("EN_ATTENTE_SANS_RELECTEUR");
         }
 

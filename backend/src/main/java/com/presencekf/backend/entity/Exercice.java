@@ -46,10 +46,11 @@ public class Exercice {
     private String lien;
 
     @Column(nullable = false, length = 30)
-    private String statut;
-
-    @Column(name = "relecteur_id")
+    private String statut;    @Column(name = "relecteur_id")
     private Long relecteurId;
+
+    @Column(name = "relecteur2_id")
+    private Long relecteur2Id;
 
     @Column(name = "depose_at", nullable = false)
     private LocalDateTime deposeAt;
@@ -74,6 +75,10 @@ public class Exercice {
     public Long getRelecteurId() { return relecteurId; }
     public void setRelecteurId(Long relecteurId) { this.relecteurId = relecteurId; }
 
+    public Long getRelecteur2Id() { return relecteur2Id; }
+    public void setRelecteur2Id(Long relecteur2Id) { this.relecteur2Id = relecteur2Id; }
+
     public LocalDateTime getDeposeAt() { return deposeAt; }
     public void setDeposeAt(LocalDateTime deposeAt) { this.deposeAt = deposeAt; }
+
 }

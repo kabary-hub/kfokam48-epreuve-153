@@ -54,12 +54,17 @@ public class TableauService {
         Long etudiantId = etudiant.getId();
         List<Exercice> exercices = exerciceRepository.findByEtudiantId(etudiantId);
 
+        Double moyenne = calculerMoyenne(exercices);
+        boolean provisoire = exercices.stream()
+                .anyMatch(e -> "PROVISOIRE".equals(e.getStatut()));
+
         return new TableauDto(
                 etudiantId,
                 etudiant.getNom(),
                 presenceRepository.countByEtudiantId(etudiantId),
                 exercices.size(),
-                calculerMoyenne(exercices),
+                moyenne,
+                provisoire,
                 exerciceRepository.countByRelecteurIdAndStatutNot(etudiantId, "RELUE")
         );
     }

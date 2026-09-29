@@ -5,6 +5,7 @@ import com.presencekf.backend.entity.Relecture;
 import com.presencekf.backend.entity.Session;
 import com.presencekf.backend.exception.AutoRelectureException;
 import com.presencekf.backend.exception.NoteInvalideException;
+import com.presencekf.backend.exception.RelecteurNonAssigneException;
 import com.presencekf.backend.exception.RelectureDejaRendueException;
 import com.presencekf.backend.exception.SessionClotureeException;
 import com.presencekf.backend.exception.SessionInconnueException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Service métier pour les relectures (M6, EF7).
@@ -40,15 +42,17 @@ public class RelectureService {
     }
 
     /**
-     * Enregistre une première relecture pour un exercice.
+     * Enregistre une relecture pour un exercice (M6, EF7, issue #53).
      *
      * @param exerciceId identifiant de l'exercice à relire
+     * @param relecteurId identifiant du relecteur qui rend la note
      * @param note note entière entre 0 et 20
      * @param commentaire commentaire (éventuellement nul)
      * @return la relecture créée ou mise à jour
      */
     @Transactional
-    public Relecture rendre(Long exerciceId, Integer note, String commentaire) {
+    public Relecture rendre(Long exerciceId, Long relecteurId,
+                           Integer note, String commentaire) {
         Exercice exercice = exerciceRepository.findById(exerciceId)
                 .orElseThrow(() -> new SessionInconnueException(
                         "Aucun exercice ne correspond à cet identifiant."));
@@ -62,22 +66,56 @@ public class RelectureService {
                     "La session est clôturée, aucune relecture n'est possible.");
         }
 
-        if (exercice.getRelecteurId() == null) {
-            throw new AutoRelectureException(
-                    "Aucun relecteur n'est assigné à cet exercice.");
+        // Vérifier que le relecteur est bien assigné (1er ou 2e relecteur)
+        if (exercice.getRelecteurId() == null
+                || (!relecteurId.equals(exercice.getRelecteurId())
+                    && !relecteurId.equals(exercice.getRelecteur2Id()))) {
+            throw new RelecteurNonAssigneException(
+                    "Cet étudiant n'est pas relecteur de cet exercice.");
         }
 
-        if (exercice.getRelecteurId().equals(exercice.getEtudiantId())) {
+        // Si relecteurId absent, choisir le premier relecteur assigné
+        // qui n'a pas encore rendu sa relecture (issue #53)
+        if (relecteurId == null) {
+            if (exercice.getRelecteurId() != null) {
+                Optional<Relecture> existing1 =
+                    relectureRepository.findByExerciceIdAndRelecteurId(
+                        exerciceId, exercice.getRelecteurId());
+                if (existing1.isEmpty() || !"RELUE".equals(existing1.get().getStatut())) {
+                    relecteurId = exercice.getRelecteurId();
+                }
+            }
+            if (relecteurId == null && exercice.getRelecteur2Id() != null) {
+                Optional<Relecture> existing2 =
+                    relectureRepository.findByExerciceIdAndRelecteurId(
+                        exerciceId, exercice.getRelecteur2Id());
+                if (existing2.isEmpty() || !"RELUE".equals(existing2.get().getStatut())) {
+                    relecteurId = exercice.getRelecteur2Id();
+                }
+            }
+            if (relecteurId == null) {
+                throw new RelecteurNonAssigneException(
+                    "Aucun relecteur disponible pour cet exercice.");
+            }
+        }
+        // Copie effectively final pour utilisation dans lambda (issue #53)
+        Long relecteurIdFinal = relecteurId;
+
+
+        // Vérifier que le relecteur n'est pas l'auteur (Q5, RG4)
+        if (relecteurId.equals(exercice.getEtudiantId())) {
             throw new AutoRelectureException(
                     "Un étudiant ne peut pas relire son propre exercice.");
         }
 
-        Relecture relecture = relectureRepository.findByExerciceId(exerciceId)
-                .orElse(null);
-        if (relecture != null && "RELUE".equals(relecture.getStatut())) {
+        // Vérifier si le relecteur a déjà rendu sa relecture
+        Optional<Relecture> existing =
+                relectureRepository.findByExerciceIdAndRelecteurId(exerciceId,
+                        relecteurIdFinal);
+        if (existing.isPresent() && "RELUE".equals(existing.get().getStatut())) {
             // Une relecture rendue est définitive (M8, RG14).
             throw new RelectureDejaRendueException(
-                    "Une relecture a déjà été rendue pour cet exercice.");
+                    "Vous avez déjà rendu cette relecture.");
         }
 
         if (note == null || note < 0 || note > 20) {
@@ -85,18 +123,30 @@ public class RelectureService {
                     "La note doit être un entier entre 0 et 20.");
         }
 
-        if (relecture == null) {
-            relecture = new Relecture();
-            relecture.setExerciceId(exerciceId);
-            relecture.setRelecteurId(exercice.getRelecteurId());
-        }
+        // Créer ou mettre à jour la relecture
+        Relecture relecture = existing.orElseGet(() -> {
+            Relecture r = new Relecture();
+
+            r.setExerciceId(exerciceId);
+            r.setRelecteurId(relecteurIdFinal);
+            r.setExerciceId(exerciceId);
+            return r;
+        });
         relecture.setNote(note);
         relecture.setCommentaire(commentaire);
         relecture.setStatut("RELUE");
         relecture.setRendueAt(LocalDateTime.now());
         Relecture savedRelecture = relectureRepository.save(relecture);
 
-        exercice.setStatut("RELUE");
+        // Calculer le statut de l'exercice (PROVISOIRE ou RELUE)
+        long nbRendues =
+                relectureRepository.countByExerciceIdAndStatut(exerciceId,
+                        "RELUE");
+        if (nbRendues >= 2) {
+            exercice.setStatut("RELUE");
+        } else {
+            exercice.setStatut("PROVISOIRE");
+        }
         exerciceRepository.save(exercice);
 
         return savedRelecture;

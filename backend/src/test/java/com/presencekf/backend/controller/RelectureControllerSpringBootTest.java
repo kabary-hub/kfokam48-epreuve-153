@@ -10,12 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.mockito.Mockito.lenient;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -59,6 +61,7 @@ class RelectureControllerSpringBootTest {
         exercice.setLien("https://exemple.com/exercice");
         exercice.setStatut("EN_ATTENTE");
         exercice.setRelecteurId(2L);
+        exercice.setRelecteur2Id(3L);
         exercice.setDeposeAt(LocalDateTime.now());
         exerciceRepository.save(exercice);
         exerciceId = exercice.getId();
@@ -75,7 +78,8 @@ class RelectureControllerSpringBootTest {
 
         mockMvc.perform(post("/api/relectures/" + exerciceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .param("relecteurId", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statut").value("RELUE"))
                 .andExpect(jsonPath("$.exerciceId").value(exerciceId));
@@ -92,7 +96,8 @@ class RelectureControllerSpringBootTest {
 
         mockMvc.perform(post("/api/relectures/" + exerciceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .param("relecteurId", "2"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("NOTE_INVALIDE"))
                 .andExpect(jsonPath("$.message").exists());
@@ -109,7 +114,8 @@ class RelectureControllerSpringBootTest {
 
         mockMvc.perform(post("/api/relectures/99999")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .param("relecteurId", "2"))
                 .andExpect(status().isNotFound());
     }
 
@@ -124,12 +130,15 @@ class RelectureControllerSpringBootTest {
 
         mockMvc.perform(post("/api/relectures/" + exerciceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .param("relecteurId", "2"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/relectures/" + exerciceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .param("relecteurId", "2"))
+
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("RELECTURE_DEJA_RENDUE"))
                 .andExpect(jsonPath("$.message").exists());

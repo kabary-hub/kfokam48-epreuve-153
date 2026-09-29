@@ -15,18 +15,20 @@ public class TableauDto {
     private long presences;
     private long exercicesDeposes;
     private Double moyenne;
+    private boolean provisoire;
     private long relecturesEnAttente;
 
     public TableauDto() {}
 
     public TableauDto(Long etudiantId, String nom, long presences,
                       long exercicesDeposes, Double moyenne,
-                      long relecturesEnAttente) {
+                      boolean provisoire, long relecturesEnAttente) {
         this.etudiantId = etudiantId;
         this.nom = nom;
         this.presences = presences;
         this.exercicesDeposes = exercicesDeposes;
         this.moyenne = moyenne;
+        this.provisoire = provisoire;
         this.relecturesEnAttente = relecturesEnAttente;
     }
 
@@ -49,4 +51,7 @@ public class TableauDto {
     public void setRelecturesEnAttente(long relecturesEnAttente) {
         this.relecturesEnAttente = relecturesEnAttente;
     }
+
+    public boolean isProvisoire() { return provisoire; }
+    public void setProvisoire(boolean provisoire) { this.provisoire = provisoire; }
 }

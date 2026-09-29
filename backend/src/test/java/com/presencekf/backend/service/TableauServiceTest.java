@@ -53,7 +53,7 @@ class TableauServiceTest {
     }
 
     @Test
-    void etudiantSansExerciceRelu_doitAvoirMoyenneNulle() {
+    void etudiantSansExerciceRelu_doitAvoirMoyenneNulleEtProvisoireFaux() {
         when(promotionRepository.findById(1L)).thenReturn(Optional.of(new Promotion()));
         Etudiant etudiant = new Etudiant();
         etudiant.setId(1L);
@@ -70,10 +70,11 @@ class TableauServiceTest {
         assertThat(resultat.get(0).getPresences()).isEqualTo(3L);
         assertThat(resultat.get(0).getExercicesDeposes()).isZero();
         assertThat(resultat.get(0).getMoyenne()).isNull();
+        assertThat(resultat.get(0).isProvisoire()).isFalse();
     }
 
     @Test
-    void etudiantAvecExercicesRelus_doitAgregerMoyenneEtRelecturesEnAttente() {
+    void etudiantAvecExercicesRelus_doitAgregerMoyenneEtProvisoireFaux() {
         when(promotionRepository.findById(1L)).thenReturn(Optional.of(new Promotion()));
         Etudiant etudiant = new Etudiant();
         etudiant.setId(1L);
@@ -82,8 +83,10 @@ class TableauServiceTest {
 
         Exercice exercice1 = new Exercice();
         exercice1.setId(10L);
+        exercice1.setStatut("RELUE");
         Exercice exercice2 = new Exercice();
         exercice2.setId(11L);
+        exercice2.setStatut("RELUE");
         when(exerciceRepository.findByEtudiantId(1L)).thenReturn(List.of(exercice1, exercice2));
         when(presenceRepository.countByEtudiantId(1L)).thenReturn(5L);
         when(exerciceRepository.countByRelecteurIdAndStatutNot(1L, "RELUE")).thenReturn(1L);
@@ -105,6 +108,37 @@ class TableauServiceTest {
         assertThat(resultat.get(0).getPresences()).isEqualTo(5L);
         assertThat(resultat.get(0).getExercicesDeposes()).isEqualTo(2L);
         assertThat(resultat.get(0).getMoyenne()).isEqualTo(15.0);
+        assertThat(resultat.get(0).isProvisoire()).isFalse();
         assertThat(resultat.get(0).getRelecturesEnAttente()).isEqualTo(1L);
+    }
+
+    @Test
+    void etudiantAvecExerciceProvisoire_doitAvoirProvisoireVrai() {
+        when(promotionRepository.findById(1L)).thenReturn(Optional.of(new Promotion()));
+        Etudiant etudiant = new Etudiant();
+        etudiant.setId(1L);
+        etudiant.setNom("Charlie");
+        when(etudiantRepository.findByPromotionId(1L)).thenReturn(List.of(etudiant));
+
+        Exercice exercice1 = new Exercice();
+        exercice1.setId(10L);
+        exercice1.setStatut("PROVISOIRE");
+        when(exerciceRepository.findByEtudiantId(1L)).thenReturn(List.of(exercice1));
+        when(presenceRepository.countByEtudiantId(1L)).thenReturn(4L);
+        when(exerciceRepository.countByRelecteurIdAndStatutNot(1L, "RELUE")).thenReturn(0L);
+
+        Relecture relecture1 = new Relecture();
+        relecture1.setExerciceId(10L);
+        relecture1.setNote(12);
+        relecture1.setStatut("RELUE");
+        when(relectureRepository.findByExerciceIdIn(List.of(10L)))
+                .thenReturn(List.of(relecture1));
+
+        List<TableauDto> resultat = tableauService.construire(1L);
+
+        assertThat(resultat).hasSize(1);
+        assertThat(resultat.get(0).getNom()).isEqualTo("Charlie");
+        assertThat(resultat.get(0).getMoyenne()).isEqualTo(12.0);
+        assertThat(resultat.get(0).isProvisoire()).isTrue();
     }
 }

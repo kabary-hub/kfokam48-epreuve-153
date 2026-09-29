@@ -304,3 +304,22 @@ select {
     gap: 1rem;
   }
 }
+
+/* Badge "provisoire" (issue #53) */
+.badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
+.badge-provisoire {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}

@@ -98,13 +98,13 @@ class ExerciceServiceTest {
     }
 
     @Test
-    void casNominal_doitCreerExerciceAvecStatutEnAttente() {
+    void casNominal_doitCreerExerciceAvecDeuxRelecteurs() {
         when(sessionRepository.findById(1L))
                 .thenReturn(Optional.of(sessionOuverte(1L)));
         when(exerciceRepository.findBySessionIdAndEtudiantId(1L, 1L))
                 .thenReturn(Optional.empty());
-        when(assignationRelecteurService.choisirRelecteur(1L, 1L))
-                .thenReturn(Optional.of(2L));
+        when(assignationRelecteurService.choisirRelecteurs(1L, 1L))
+                .thenReturn(new AssignationRelecteurService.ChoixRelecteurs(2L, 3L));
         when(exerciceRepository.save(any(Exercice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -117,6 +117,26 @@ class ExerciceServiceTest {
         assertThat(exercice.getStatut()).isEqualTo("EN_ATTENTE");
         assertThat(exercice.getDeposeAt()).isNotNull();
         assertThat(exercice.getRelecteurId()).isEqualTo(2L);
+        assertThat(exercice.getRelecteur2Id()).isEqualTo(3L);
+    }
+
+    @Test
+    void unSeulCandidat_doitCreerExerciceAvecUnSeulRelecteur() {
+        when(sessionRepository.findById(1L))
+                .thenReturn(Optional.of(sessionOuverte(1L)));
+        when(exerciceRepository.findBySessionIdAndEtudiantId(1L, 1L))
+                .thenReturn(Optional.empty());
+        when(assignationRelecteurService.choisirRelecteurs(1L, 1L))
+                .thenReturn(new AssignationRelecteurService.ChoixRelecteurs(2L, null));
+        when(exerciceRepository.save(any(Exercice.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Exercice exercice = exerciceService.deposer(
+                1L, 1L, "https://exemple.com/exo");
+
+        assertThat(exercice.getStatut()).isEqualTo("EN_ATTENTE");
+        assertThat(exercice.getRelecteurId()).isEqualTo(2L);
+        assertThat(exercice.getRelecteur2Id()).isNull();
     }
 
     @Test
@@ -125,8 +145,8 @@ class ExerciceServiceTest {
                 .thenReturn(Optional.of(sessionOuverte(1L)));
         when(exerciceRepository.findBySessionIdAndEtudiantId(1L, 1L))
                 .thenReturn(Optional.empty());
-        when(assignationRelecteurService.choisirRelecteur(1L, 1L))
-                .thenReturn(Optional.empty());
+        when(assignationRelecteurService.choisirRelecteurs(1L, 1L))
+                .thenReturn(new AssignationRelecteurService.ChoixRelecteurs(null, null));
         when(exerciceRepository.save(any(Exercice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -135,5 +155,6 @@ class ExerciceServiceTest {
 
         assertThat(exercice.getStatut()).isEqualTo("EN_ATTENTE_SANS_RELECTEUR");
         assertThat(exercice.getRelecteurId()).isNull();
+        assertThat(exercice.getRelecteur2Id()).isNull();
     }
 }
