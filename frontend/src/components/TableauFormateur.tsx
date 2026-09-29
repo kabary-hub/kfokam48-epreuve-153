@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { chargerTableau, type TableauLigne } from '../api/tableauApi';
 import { useAsync } from '../hooks/useAsync';
 
-/** Tableau récapitulatif du formateur (M7, EF9). */
+/** Tableau récapitulatif du formateur (M7, EF9 + issue #53). */
 export function TableauFormateur() {
   const [promotionId, setPromotionId] = useState(1);
   const { data, loading, error, run } = useAsync<TableauLigne[]>();
@@ -56,7 +56,14 @@ export function TableauFormateur() {
                   <td>{ligne.nom}</td>
                   <td>{ligne.presences}</td>
                   <td>{ligne.exercicesDeposes}</td>
-                  <td>{ligne.moyenne === null ? '—' : ligne.moyenne.toFixed(2)}</td>
+                  <td>
+                    {ligne.moyenne === null ? '—' : ligne.moyenne.toFixed(2)}
+                    {ligne.provisoire && (
+                      <span className="badge badge-provisoire" title="Note provisoire : une seule relecture rendue">
+                        provisoire
+                      </span>
+                    )}
+                  </td>
                   <td>{ligne.relecturesEnAttente}</td>
                 </tr>
               ))}

@@ -5,16 +5,18 @@ import {
 } from '../api/relecturesApi';
 import { useAsync } from '../hooks/useAsync';
 
-/** Formulaire de relecture (M6, EF7). */
+/** Formulaire de relecture (M6, EF7 + issue #53). */
 export function RelectureForm() {
   const [exerciceId, setExerciceId] = useState(1);
+  const [relecteurId, setRelecteurId] = useState<string>('');
   const [note, setNote] = useState(15);
   const [commentaire, setCommentaire] = useState('');
   const { data, loading, error, run } = useAsync<RelectureResponseDto>();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await run(() => rendreRelecture(exerciceId, { note, commentaire }));
+    const rid = relecteurId.trim() === '' ? undefined : Number(relecteurId);
+    await run(() => rendreRelecture(exerciceId, { note, commentaire }, rid));
   };
 
   return (
@@ -34,6 +36,25 @@ export function RelectureForm() {
           />
           <p className="form-help">
             Saisissez l’identifiant de l’exercice qui vous a été attribué.
+          </p>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="relecteur-id-relecture">
+            Identifiant du relecteur (optionnel)
+          </label>
+          <input
+            id="relecteur-id-relecture"
+            type="number"
+            min={1}
+            step={1}
+            value={relecteurId}
+            onChange={(event) => setRelecteurId(event.target.value)}
+            placeholder="Laisser vide pour choisir automatiquement"
+          />
+          <p className="form-help">
+            Si vous laissez vide, le système choisit le premier relecteur
+            assigné qui n’a pas encore rendu sa relecture.
           </p>
         </div>
 

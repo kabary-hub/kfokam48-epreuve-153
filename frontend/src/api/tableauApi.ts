@@ -7,6 +7,11 @@ export interface TableauLigne {
   exercicesDeposes: number;
   moyenne: number | null;
   relecturesEnAttente: number;
+  /**
+   * Vrai si la moyenne est provisoire (une seule relecture rendue sur
+   * les deux attendues, issue #53).
+   */
+  provisoire: boolean;
 }
 
 /**
