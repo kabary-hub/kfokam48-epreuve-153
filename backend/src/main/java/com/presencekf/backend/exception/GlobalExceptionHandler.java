@@ -176,6 +176,16 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    /** Relecteur non assigné → 403 REELECTEUR_NON_ASSIGNE (issue #53, RG4/RG5). */
+    @ExceptionHandler(RelecteurNonAssigneException.class)
+    public ResponseEntity<Map<String, String>> handleRelecteurNonAssigne(
+            RelecteurNonAssigneException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "code", "REELECTEUR_NON_ASSIGNE",
+                "message", ex.getMessage()
+        ));
+    }
+
     /** Promotion inexistante pour le tableau → 404 PROMOTION_INCONNUE (M7). */
     @ExceptionHandler(PromotionInconnueException.class)
     public ResponseEntity<Map<String, String>> handlePromotionInconnue(
