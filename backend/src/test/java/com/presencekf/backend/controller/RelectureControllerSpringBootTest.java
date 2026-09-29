@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.mockito.leniency.Leniency;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -65,11 +65,6 @@ class RelectureControllerSpringBootTest {
         exercice.setDeposeAt(LocalDateTime.now());
         exerciceRepository.save(exercice);
         exerciceId = exercice.getId();
-
-        // Compter les relectures RELUE pour l'exercice (0 au départ)
-        lenient();
-        when(relectureRepository.countByExerciceIdAndStatut(exerciceId, "RELUE"))
-                .thenReturn(0L);
     }
 
     @Test
