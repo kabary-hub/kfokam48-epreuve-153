@@ -74,6 +74,34 @@ public class RelectureService {
                     "Cet étudiant n'est pas relecteur de cet exercice.");
         }
 
+        // Si relecteurId absent, choisir le premier relecteur assigné
+        // qui n'a pas encore rendu sa relecture (issue #53)
+        if (relecteurId == null) {
+            if (exercice.getRelecteurId() != null) {
+                Optional<Relecture> existing1 =
+                    relectureRepository.findByExerciceIdAndRelecteurId(
+                        exerciceId, exercice.getRelecteurId());
+                if (existing1.isEmpty() || !"RELUE".equals(existing1.get().getStatut())) {
+                    relecteurId = exercice.getRelecteurId();
+                }
+            }
+            if (relecteurId == null && exercice.getRelecteur2Id() != null) {
+                Optional<Relecture> existing2 =
+                    relectureRepository.findByExerciceIdAndRelecteurId(
+                        exerciceId, exercice.getRelecteur2Id());
+                if (existing2.isEmpty() || !"RELUE".equals(existing2.get().getStatut())) {
+                    relecteurId = exercice.getRelecteur2Id();
+                }
+            }
+            if (relecteurId == null) {
+                throw new RelecteurNonAssigneException(
+                    "Aucun relecteur disponible pour cet exercice.");
+            }
+        }
+        // Copie effectively final pour utilisation dans lambda (issue #53)
+        Long relecteurIdFinal = relecteurId;
+
+
         // Vérifier que le relecteur n'est pas l'auteur (Q5, RG4)
         if (relecteurId.equals(exercice.getEtudiantId())) {
             throw new AutoRelectureException(
@@ -83,7 +111,7 @@ public class RelectureService {
         // Vérifier si le relecteur a déjà rendu sa relecture
         Optional<Relecture> existing =
                 relectureRepository.findByExerciceIdAndRelecteurId(exerciceId,
-                        relecteurId);
+                        relecteurIdFinal);
         if (existing.isPresent() && "RELUE".equals(existing.get().getStatut())) {
             // Une relecture rendue est définitive (M8, RG14).
             throw new RelectureDejaRendueException(
@@ -98,8 +126,10 @@ public class RelectureService {
         // Créer ou mettre à jour la relecture
         Relecture relecture = existing.orElseGet(() -> {
             Relecture r = new Relecture();
+
             r.setExerciceId(exerciceId);
-            r.setRelecteurId(relecteurId);
+            r.setRelecteurId(relecteurIdFinal);
+            r.setExerciceId(exerciceId);
             return r;
         });
         relecture.setNote(note);

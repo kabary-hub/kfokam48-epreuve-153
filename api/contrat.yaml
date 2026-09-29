@@ -348,9 +348,12 @@ paths:
         - $ref: '#/components/parameters/Id'
         - name: relecteurId
           in: query
-          required: true
+          required: false
           schema: { type: integer, format: int64 }
-          description: Identifiant du relecteur qui rend la note (issue #53).
+          description: |
+            Identifiant du relecteur (optionnel). Si absent, le système
+            choisit le premier relecteur assigné qui n'a pas encore rendu
+            sa relecture.
       requestBody:
         required: true
         content:
@@ -369,9 +372,12 @@ paths:
         - $ref: '#/components/parameters/Id'
         - name: relecteurId
           in: query
-          required: true
+          required: false
           schema: { type: integer, format: int64 }
-          description: Identifiant du relecteur qui modifie la note (issue #53).
+          description: |
+            Identifiant du relecteur (optionnel). Si absent, le système
+            choisit le premier relecteur assigné qui n'a pas encore rendu
+            sa relecture.
       requestBody:
         required: true
         content:

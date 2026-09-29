@@ -32,7 +32,7 @@ public class RelectureController {
     @PostMapping("/{id}")
     public ResponseEntity<RelectureResponseDto> rendre(
             @PathVariable Long id,
-            @RequestParam Long relecteurId,
+            @RequestParam(required = false) Long relecteurId,
             @Valid @RequestBody RelectureCreateDto dto) {
         Relecture relecture = relectureService.rendre(
                 id, relecteurId, dto.getNote(), dto.getCommentaire());
