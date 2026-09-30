@@ -22,7 +22,7 @@
 | | |
 |---|---|
 | Dépôt (public) | https://github.com/kabary-hub/kfokam48-gitlab-153 |
-| Commit final — hash complet, 40 caractères | 67812601cd9803497dc03bbdd8284482085bbcd8 |
+| Commit final — hash complet, 40 caractères | <nouveau-hash-gitlab> |
 
 ## Technique
 
